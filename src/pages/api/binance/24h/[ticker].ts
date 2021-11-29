@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const getChangesUrlApi = "http://localhost:3000/api/binance/get24hs";
+const getChangesUrlApi = `${process.env.SELF_HOST}/api/binance/get24hs`;
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   let ticker = req.query.ticker as string;

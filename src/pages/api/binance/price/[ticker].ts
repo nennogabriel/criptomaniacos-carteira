@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const getPricesUrlApi = "http://localhost:3000/api/binance/getPrices";
+const getPricesUrlApi = `${process.env.SELF_HOST}/api/binance/getPrices`;
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   let ticker = req.query.ticker as string;
