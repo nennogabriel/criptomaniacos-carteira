@@ -20,7 +20,7 @@ async function updatePrices() {
     responsePrices.data.map((item) => [item.symbol.toUpperCase(), item.price])
   );
 
-  console.log("prices cache updated.");
+  // console.log("prices cache updated.");
 
   lastPriceDataUpdate = new Date().getTime();
 }

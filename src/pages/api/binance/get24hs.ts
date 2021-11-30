@@ -24,7 +24,7 @@ async function updateChanges() {
     ])
   );
 
-  console.log("changes cache updated.");
+  // console.log("changes cache updated.");
 
   lastChangeDataUpdate = new Date().getTime();
 }

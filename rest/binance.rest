@@ -7,7 +7,7 @@ GET http://localhost:3000/api/binance/getPrices
 
 
 ###
-GET http://localhost:3000/api/binance/price/btcusdt
+GET http://localhost:3000/api/binance/price/slpusdt
 
 ###
 GET http://localhost:3000/api/binance/price/btcusdtd
