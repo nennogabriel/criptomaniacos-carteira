@@ -158,8 +158,6 @@ export default function CarteiraRecomendada({ prices }) {
 export async function getServerSideProps(context) {
   const session = await getSession(context);
 
-  console.log(session);
-
   if (session.status === 0) {
     return {
       redirect: {
