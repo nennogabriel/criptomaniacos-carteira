@@ -1,6 +1,6 @@
 import { Box, Text } from "@chakra-ui/layout";
 
-import { Table, Button } from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
 import Head from "next/head";
 import React from "react";
 import NextLink from "next/link";
@@ -17,9 +17,13 @@ export default function Home() {
       <Box m="0 auto" maxW="90%" w="1200px">
         <PageHeader />
         <Box>
-          <NextLink href="/carteira-recomendada">
-            <Button as="a">Carteira Recomendada</Button>
-          </NextLink>
+          <p>contrate nosso serviço ou aguarde a autorização para uso.</p>
+          <Button
+            as="a"
+            href="https://criptomaniacos.com.br/carteira-recomendada-acesso-liberado/"
+          >
+            Contrate!
+          </Button>
         </Box>
       </Box>
     </>
