@@ -12,6 +12,7 @@ type UserProps = {
 
 export default NextAuth({
   // Configure one or more authentication providers
+  secret: process.env.NEXTAUTH_SECRET,
 
   jwt: {
     secret: process.env.NEXTAUTH_SECRET,
