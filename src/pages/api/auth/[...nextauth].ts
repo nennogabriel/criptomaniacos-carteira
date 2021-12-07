@@ -12,12 +12,9 @@ type UserProps = {
 
 export default NextAuth({
   // Configure one or more authentication providers
-  secret: process.env.NEXTAUTH_SECRET,
+
   jwt: {
-    signingKey: { kty: "oct", kid: "--", alg: "HS256", k: "--" },
-    verificationOptions: {
-      algorithms: ["HS256"],
-    },
+    secret: process.env.NEXTAUTH_SECRET,
   },
   providers: [
     GithubProvider({
