@@ -12,86 +12,139 @@ import {
   Editable,
   EditableInput,
   EditablePreview,
+  ButtonGroup,
+  Button,
+  Input,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { getSession, signIn, useSession } from "next-auth/react";
 import Head from "next/head";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import PageHeader from "../components/PageHeader";
 
-export default function CarteiraRecomendada({ prices }) {
-  const session = useSession();
-  const [cryptos, setCryptos] = useState([
-    ["FTM", 0],
-    ["SAND", 0],
-    ["SOL", 0],
-    ["SCRT", 0],
-    ["MANA", 0],
-    ["AR", 0],
-    ["AVAX", 0],
-    ["NEAR", 0],
-    ["SHIB", 0],
-    ["LRC", 0],
-  ]);
+const data = {
+  title: "Carteira recomendada",
+  assets: [
+    { ticker: "FTM", qtd: 0, weight: 10 },
+    { ticker: "SAND", qtd: 0, weight: 10 },
+    { ticker: "SOL", qtd: 0, weight: 10 },
+    { ticker: "SCRT", qtd: 0, weight: 10 },
+  ].sort(),
+  changes: [],
+};
 
-  const cryptoInUSDT = useMemo(() => {
-    const data = {};
-    cryptos.forEach((c) => {
-      const decimal = 4;
-      data[c[0]] = (
-        Math.floor(Number(c[1]) * prices[`${c[0]}USDT`] * 10 ** decimal) /
-        10 ** decimal
-      ).toFixed(decimal);
-      if (data[c[0]] === "NaN") {
-        data[c[0]] = (
-          Math.floor(
-            Number(c[1]) *
-              prices[`${c[0]}BTC`] *
-              prices[`BTCUSDT`] *
-              10 ** decimal
-          ) /
-          10 ** decimal
-        ).toFixed(decimal);
-      }
+var portifolioSum = {
+  USDT: 0,
+  BTC: 0,
+  weight: 0,
+};
+
+export default function CarteiraRecomendada({ binancePrices }) {
+  const session = useSession();
+  const [cryptos, setCryptos] = useState(data.assets);
+
+  const [quote, setQuote] = useState("USDT");
+  const [balanceType, setBalanceType] = useState("TOKEN");
+  const [cash, setCash] = useState(0);
+
+  const portifolioList = useMemo(() => {
+    const data = cryptos.map((item) => {
+      const { ticker, qtd, weight } = item;
+      const quotes = Object.keys(binancePrices)
+        .filter((item) => item.startsWith(ticker))
+        .map((item) => item.replace(ticker, ""));
+      const quote = {
+        BTC: binancePrices[`${ticker}BTC`] * qtd,
+        USDT:
+          (binancePrices[`${ticker}USDT`] ||
+            binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`]) * qtd,
+      };
+      const quoteShow = {
+        BTC: quote.BTC.toFixed(8),
+        USDT: quote.USDT.toFixed(3),
+      };
+      const hasUSDT = quotes.some((item) => item === "USDT");
+      const percent = {
+        ideal: weight / portifolioSum.weight,
+        actual: quote.USDT / portifolioSum.USDT,
+      };
+
+      const action = {
+        min: Math.abs(percent.ideal - percent.actual) * portifolioSum.USDT > 10,
+        text: percent.ideal > percent.actual ? "Comprar" : "Vender",
+        quote: {
+          USDT: (
+            Math.abs(percent.ideal - percent.actual) * portifolioSum.USDT
+          ).toFixed(2),
+          BTC: (
+            Math.abs(percent.ideal - percent.actual) * portifolioSum.BTC
+          ).toFixed(8),
+          TOKEN: (
+            (Math.abs(percent.ideal - percent.actual) * portifolioSum.USDT) /
+            (binancePrices[`${ticker}USDT`] ||
+              binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`])
+          ).toFixed(5),
+        },
+      };
+      return { ...item, quote, quoteShow, hasUSDT, percent, action };
     });
 
     return data;
-  }, [cryptos, prices]);
+  }, [cryptos, binancePrices, portifolioSum]);
 
-  const cryptoSum = useMemo(
-    () => cryptos.reduce((a, c) => a + Number(cryptoInUSDT[c[0]]), 0),
-    [cryptoInUSDT, cryptos]
+  portifolioSum = useMemo(
+    () => ({
+      USDT:
+        portifolioList
+          .map((item) => item.quote.USDT)
+          .reduce((acc, item) => acc + item) + cash,
+      BTC:
+        portifolioList
+          .map((item) => item.quote.BTC)
+          .reduce((acc, item) => acc + item) +
+        cash / binancePrices["BTCUSDT"],
+      weight: portifolioList
+        .map((item) => item.weight)
+        .reduce((acc, item) => acc + item),
+    }),
+    [binancePrices, cash, portifolioList]
   );
 
-  const cryptoPercent = useMemo(() => {
-    const data = {};
-
-    cryptos.forEach((c) => {
-      data[c[0]] = ((Number(cryptoInUSDT[c[0]]) / cryptoSum) * 100).toFixed(1);
-    });
-    return data;
-  }, [cryptoInUSDT, cryptoSum, cryptos]);
-
-  const cryptoAdjust = useMemo(() => {
-    const data = {};
-    cryptos.forEach((c) => {
-      const ajuste = 10 - Number(cryptoPercent[c[0]]);
-      if (ajuste > 0) {
-        data[c[0]] = `Comprar ${(cryptoSum * ajuste).toFixed(2)} USDT`;
-      }
-      if (ajuste < -0) {
-        data[c[0]] = `Vender ${(cryptoSum * Math.abs(ajuste)).toFixed(2)} USDT`;
-      }
-    });
-    return data;
-  }, [cryptos, cryptoPercent, cryptoSum]);
-
   function handleQtdEditableSubmit(crypto, newData) {
-    const updateCryptos = cryptos.map((c) =>
-      c[0] == crypto[0] ? [[c[0]], newData] : c
-    );
+    const updateCryptos = cryptos.map((c) => ({
+      ...c,
+      qtd: c.ticker === crypto.ticker ? newData : c.qtd,
+    }));
     setCryptos(updateCryptos);
   }
+
+  const handleActionTicker = useCallback(
+    (crypto) => {
+      if (crypto.action.text === "Comprar") {
+        const index = cryptos.findIndex((c) => c.ticker === crypto.ticker);
+        setCryptos(
+          cryptos.map((i) =>
+            i.ticker === crypto.ticker
+              ? { ...i, qtd: i.qtd + Number(crypto.action.quote.TOKEN) }
+              : i
+          )
+        );
+        setCash(cash - crypto.action.quote.USDT);
+      } else {
+        const updateCriptos = [
+          ...cryptos.filter((i) => i.ticker !== crypto.ticker),
+          {
+            ticker: crypto.ticker,
+            qtd: crypto.qtd - crypto.action.quote.TOKEN,
+            weight: crypto.weight,
+          },
+        ].sort();
+        setCryptos(updateCriptos);
+        setCash(cash + crypto.action.quote.USDT);
+      }
+    },
+    [cash, cryptos]
+  );
 
   if (session.status == "unauthenticated") {
     signIn();
@@ -107,6 +160,22 @@ export default function CarteiraRecomendada({ prices }) {
       <Box m="0 auto" maxW="90%" w="1200px">
         <PageHeader />
         <Box>
+          <ButtonGroup size="sm" isAttached variant="outline">
+            <Button
+              mr="-px"
+              colorScheme={quote === "USDT" ? "green" : "gray"}
+              onClick={() => setQuote("USDT")}
+            >
+              USDT
+            </Button>
+            <Button
+              mr="-px"
+              colorScheme={quote === "BTC" ? "yellow" : "gray"}
+              onClick={() => setQuote("BTC")}
+            >
+              BTC
+            </Button>
+          </ButtonGroup>
           <Table>
             <TableCaption>Carteira Criptomaniacos</TableCaption>
             <Thead>
@@ -115,16 +184,41 @@ export default function CarteiraRecomendada({ prices }) {
                 <Th>Quantidade</Th>
                 <Th>Saldo em USDT</Th>
                 <Th>Porcentagem</Th>
-                <Th>Rebalancear</Th>
+                <Th>
+                  Rebalancear
+                  <br />
+                  <ButtonGroup size="sm" isAttached variant="outline">
+                    <Button
+                      mr="-px"
+                      colorScheme={balanceType === "TOKEN" ? "purple" : "gray"}
+                      onClick={() => setBalanceType("TOKEN")}
+                    >
+                      TOKEN
+                    </Button>
+                    <Button
+                      mr="-px"
+                      colorScheme={
+                        balanceType === "BASE"
+                          ? quote === "USDT"
+                            ? "green"
+                            : "yellow"
+                          : "gray"
+                      }
+                      onClick={() => setBalanceType("BASE")}
+                    >
+                      {quote}
+                    </Button>
+                  </ButtonGroup>
+                </Th>
               </Tr>
             </Thead>
             <Tbody>
-              {cryptos.map((c) => (
-                <Tr key={c[0]}>
-                  <Td>{c[0]}</Td>
+              {portifolioList.map((c) => (
+                <Tr key={c.ticker}>
+                  <Td>{c.ticker}</Td>
                   <Td>
                     <Editable
-                      defaultValue={Number(c[1]).toString()}
+                      defaultValue={Number(c.qtd).toString()}
                       onSubmit={(newData) =>
                         handleQtdEditableSubmit(c, newData)
                       }
@@ -133,9 +227,23 @@ export default function CarteiraRecomendada({ prices }) {
                       <EditableInput />
                     </Editable>
                   </Td>
-                  <Td>{cryptoInUSDT[c[0]]}</Td>
-                  <Td>{cryptoPercent[c[0]]}</Td>
-                  <Td>{cryptoAdjust[c[0]]}</Td>
+                  <Td>{c.quoteShow[quote]}</Td>
+                  <Td>{(c.percent.actual * 100).toFixed(1)}%</Td>
+                  <Td>
+                    {c.action.min ? (
+                      <>
+                        <p>
+                          {balanceType === "TOKEN"
+                            ? `${c.action.text} 
+                        ${c.action.quote.TOKEN} ${c.ticker}`
+                            : `${c.action.text}
+                        ${c.action.quote[quote]} ${quote}`}
+                        </p>
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
@@ -143,12 +251,20 @@ export default function CarteiraRecomendada({ prices }) {
               <Tr>
                 <Td>Total:</Td>
                 <Td> - </Td>
-                <Td> {cryptoSum} </Td>
+                <Td> {portifolioSum[quote]} </Td>
                 <Td> - </Td>
                 <Td> </Td>
               </Tr>
             </Tfoot>
           </Table>
+          <Box>
+            Caixa:
+            <Input
+              type="number"
+              value={cash}
+              onChange={(e) => setCash(Number(e.target.value) || 0)}
+            />
+          </Box>
         </Box>
       </Box>
     </div>
@@ -158,7 +274,7 @@ export default function CarteiraRecomendada({ prices }) {
 export async function getServerSideProps(context) {
   const session = await getSession(context);
 
-  if (session.status === 0) {
+  if (session?.status === 0) {
     return {
       redirect: {
         destination: "/contrate",
@@ -170,8 +286,8 @@ export async function getServerSideProps(context) {
   const response = await axios.get(
     `${process.env.APP_HOST}/api/binance/getPrices`
   );
-  const prices = response.data;
+  const binancePrices = response.data;
   return {
-    props: { prices },
+    props: { binancePrices },
   };
 }
