@@ -30,6 +30,7 @@ const data = {
     { ticker: "FTT", qtd: 0, weight: 10 },
     { ticker: "FTM", qtd: 0, weight: 10 },
     { ticker: "LUNA", qtd: 0, weight: 10 },
+    { ticker: "KLAY", qtd: 0, weight: 10 },
     { ticker: "MATIC", qtd: 0, weight: 10 },
     { ticker: "NEAR", qtd: 0, weight: 10 },
     { ticker: "SAND", qtd: 0, weight: 10 },
