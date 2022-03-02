@@ -102,7 +102,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
     });
 
     return data;
-  }, [cryptos, binancePrices, portifolioSum]);
+  }, [cryptos, binancePrices]);
 
   portifolioSum = useMemo(
     () => ({
@@ -140,12 +140,25 @@ export default function CarteiraRecomendada({ binancePrices }) {
 
     return isEditing ? (
       <ButtonGroup justifyContent="center" size="sm">
-        <IconButton icon={<FaCheckSquare />} {...getSubmitButtonProps()} />
-        <IconButton icon={<FaWindowClose />} {...getCancelButtonProps()} />
+        <IconButton
+          icon={<FaCheckSquare />}
+          {...getSubmitButtonProps()}
+          aria-label="Check Button"
+        />
+        <IconButton
+          icon={<FaWindowClose />}
+          {...getCancelButtonProps()}
+          aria-label="Close Button"
+        />
       </ButtonGroup>
     ) : (
       <Flex justifyContent="center">
-        <IconButton size="sm" icon={<FaEdit />} {...getEditButtonProps()} />
+        <IconButton
+          size="sm"
+          icon={<FaEdit />}
+          {...getEditButtonProps()}
+          aria-label="Edit Button"
+        />
       </Flex>
     );
   }
