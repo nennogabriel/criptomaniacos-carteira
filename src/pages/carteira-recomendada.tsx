@@ -15,6 +15,9 @@ import {
   ButtonGroup,
   Button,
   Input,
+  Flex,
+  useEditableControls,
+  IconButton,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { getSession, useSession } from "next-auth/react";
@@ -22,19 +25,21 @@ import Head from "next/head";
 import React, { useMemo, useState } from "react";
 import PageHeader from "../components/PageHeader";
 
+import { FaEdit, FaWindowClose, FaCheckSquare } from "react-icons/fa";
+
 const data = {
   title: "Carteira recomendada",
   assets: [
-    { ticker: "ATOM", qtd: 0, weight: 10 },
-    { ticker: "AVAX", qtd: 0, weight: 10 },
-    { ticker: "FTT", qtd: 0, weight: 10 },
-    { ticker: "FTM", qtd: 0, weight: 10 },
-    { ticker: "LUNA", qtd: 0, weight: 10 },
-    { ticker: "KLAY", qtd: 0, weight: 10 },
-    { ticker: "MATIC", qtd: 0, weight: 10 },
-    { ticker: "NEAR", qtd: 0, weight: 10 },
-    { ticker: "SAND", qtd: 0, weight: 10 },
-    { ticker: "YFI", qtd: 0, weight: 10 },
+    { ticker: "ATOM", qtd: 1, weight: 10 },
+    { ticker: "AVAX", qtd: 1, weight: 10 },
+    { ticker: "FTT", qtd: 1, weight: 10 },
+    { ticker: "FTM", qtd: 1, weight: 10 },
+    { ticker: "LUNA", qtd: 1, weight: 10 },
+    { ticker: "KLAY", qtd: 1, weight: 10 },
+    { ticker: "MATIC", qtd: 1, weight: 10 },
+    { ticker: "NEAR", qtd: 1, weight: 10 },
+    { ticker: "SAND", qtd: 1, weight: 10 },
+    { ticker: "YFI", qtd: 1, weight: 10 },
   ].sort(),
   changes: [],
 };
@@ -44,6 +49,26 @@ var portifolioSum = {
   BTC: 0,
   weight: 0,
 };
+
+function EditableControls() {
+  const {
+    isEditing,
+    getSubmitButtonProps,
+    getCancelButtonProps,
+    getEditButtonProps,
+  } = useEditableControls();
+
+  return isEditing ? (
+    <ButtonGroup justifyContent="center" size="sm">
+      <IconButton icon={<FaCheckSquare />} {...getSubmitButtonProps()} />
+      <IconButton icon={<FaWindowClose />} {...getCancelButtonProps()} />
+    </ButtonGroup>
+  ) : (
+    <Flex justifyContent="center">
+      <IconButton size="sm" icon={<FaEdit />} {...getEditButtonProps()} />
+    </Flex>
+  );
+}
 
 export default function CarteiraRecomendada({ binancePrices }) {
   // const session = useSession();
@@ -197,12 +222,14 @@ export default function CarteiraRecomendada({ binancePrices }) {
                   <Td>
                     <Editable
                       defaultValue={Number(c.qtd).toString()}
+                      onChange={(data) => (data == "" ? 0 : data)}
                       onSubmit={(newData) =>
                         handleQtdEditableSubmit(c, newData)
                       }
                     >
                       <EditablePreview />
-                      <EditableInput />
+                      <Input type="number" as={EditableInput} />
+                      <EditableControls />
                     </Editable>
                   </Td>
                   <Td>{c.quoteShow[quote]}</Td>
