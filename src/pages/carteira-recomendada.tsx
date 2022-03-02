@@ -9,6 +9,7 @@ import {
   Th,
   Td,
   TableCaption,
+  Text,
   Editable,
   EditableInput,
   EditablePreview,
@@ -49,26 +50,6 @@ var portifolioSum = {
   BTC: 0,
   weight: 0,
 };
-
-function EditableControls() {
-  const {
-    isEditing,
-    getSubmitButtonProps,
-    getCancelButtonProps,
-    getEditButtonProps,
-  } = useEditableControls();
-
-  return isEditing ? (
-    <ButtonGroup justifyContent="center" size="sm">
-      <IconButton icon={<FaCheckSquare />} {...getSubmitButtonProps()} />
-      <IconButton icon={<FaWindowClose />} {...getCancelButtonProps()} />
-    </ButtonGroup>
-  ) : (
-    <Flex justifyContent="center">
-      <IconButton size="sm" icon={<FaEdit />} {...getEditButtonProps()} />
-    </Flex>
-  );
-}
 
 export default function CarteiraRecomendada({ binancePrices }) {
   // const session = useSession();
@@ -147,6 +128,26 @@ export default function CarteiraRecomendada({ binancePrices }) {
       qtd: c.ticker === crypto.ticker ? newData : c.qtd,
     }));
     setCryptos(updateCryptos);
+  }
+
+  function EditableControls() {
+    const {
+      isEditing,
+      getSubmitButtonProps,
+      getCancelButtonProps,
+      getEditButtonProps,
+    } = useEditableControls();
+
+    return isEditing ? (
+      <ButtonGroup justifyContent="center" size="sm">
+        <IconButton icon={<FaCheckSquare />} {...getSubmitButtonProps()} />
+        <IconButton icon={<FaWindowClose />} {...getCancelButtonProps()} />
+      </ButtonGroup>
+    ) : (
+      <Flex justifyContent="center">
+        <IconButton size="sm" icon={<FaEdit />} {...getEditButtonProps()} />
+      </Flex>
+    );
   }
 
   // if (session.status == "unauthenticated") {
@@ -233,7 +234,22 @@ export default function CarteiraRecomendada({ binancePrices }) {
                     </Editable>
                   </Td>
                   <Td>{c.quoteShow[quote]}</Td>
-                  <Td>{(c.percent.actual * 100).toFixed(1)}%</Td>
+                  <Td>
+                    <Text mr={4}>{(c.percent.actual * 100).toFixed(1)}%</Text>
+                    {c.percent.actual === 10 ? (
+                      ""
+                    ) : (
+                      <Text
+                        as="span"
+                        color={
+                          c.percent.actual * 100 - 10 > 10 ? "green" : "red"
+                        }
+                      >
+                        ({(c.percent.actual * 100 - 10).toFixed(1)}%)
+                      </Text>
+                    )}
+                  </Td>
+
                   <Td>
                     {c.action.min ? (
                       <>
