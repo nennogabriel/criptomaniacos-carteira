@@ -1,4 +1,4 @@
-import { Box, Text } from "@chakra-ui/layout";
+import { Box } from "@chakra-ui/layout";
 
 import {
   Table,
@@ -17,18 +17,23 @@ import {
   Input,
 } from "@chakra-ui/react";
 import axios from "axios";
-import { getSession, signIn, useSession } from "next-auth/react";
+import { getSession, useSession } from "next-auth/react";
 import Head from "next/head";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import PageHeader from "../components/PageHeader";
 
 const data = {
   title: "Carteira recomendada",
   assets: [
+    { ticker: "ATOM", qtd: 0, weight: 10 },
+    { ticker: "AVAX", qtd: 0, weight: 10 },
+    { ticker: "FTT", qtd: 0, weight: 10 },
     { ticker: "FTM", qtd: 0, weight: 10 },
+    { ticker: "LUNA", qtd: 0, weight: 10 },
+    { ticker: "MATIC", qtd: 0, weight: 10 },
+    { ticker: "NEAR", qtd: 0, weight: 10 },
     { ticker: "SAND", qtd: 0, weight: 10 },
-    { ticker: "SOL", qtd: 0, weight: 10 },
-    { ticker: "SCRT", qtd: 0, weight: 10 },
+    { ticker: "YFI", qtd: 0, weight: 10 },
   ].sort(),
   changes: [],
 };
@@ -40,7 +45,7 @@ var portifolioSum = {
 };
 
 export default function CarteiraRecomendada({ binancePrices }) {
-  const session = useSession();
+  // const session = useSession();
   const [cryptos, setCryptos] = useState(data.assets);
 
   const [quote, setQuote] = useState("USDT");
@@ -118,37 +123,9 @@ export default function CarteiraRecomendada({ binancePrices }) {
     setCryptos(updateCryptos);
   }
 
-  const handleActionTicker = useCallback(
-    (crypto) => {
-      if (crypto.action.text === "Comprar") {
-        const index = cryptos.findIndex((c) => c.ticker === crypto.ticker);
-        setCryptos(
-          cryptos.map((i) =>
-            i.ticker === crypto.ticker
-              ? { ...i, qtd: i.qtd + Number(crypto.action.quote.TOKEN) }
-              : i
-          )
-        );
-        setCash(cash - crypto.action.quote.USDT);
-      } else {
-        const updateCriptos = [
-          ...cryptos.filter((i) => i.ticker !== crypto.ticker),
-          {
-            ticker: crypto.ticker,
-            qtd: crypto.qtd - crypto.action.quote.TOKEN,
-            weight: crypto.weight,
-          },
-        ].sort();
-        setCryptos(updateCriptos);
-        setCash(cash + crypto.action.quote.USDT);
-      }
-    },
-    [cash, cryptos]
-  );
-
-  if (session.status == "unauthenticated") {
-    signIn();
-  }
+  // if (session.status == "unauthenticated") {
+  //   signIn();
+  // }
 
   return (
     <div>
@@ -258,7 +235,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
             </Tfoot>
           </Table>
           <Box>
-            Caixa:
+            Caixa (USDT):
             <Input
               type="number"
               value={cash}
