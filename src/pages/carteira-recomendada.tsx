@@ -102,7 +102,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
     });
 
     return data;
-  }, [cryptos, binancePrices]);
+  }, [cryptos, binancePrices, portifolioSum]);
 
   portifolioSum = useMemo(
     () => ({
