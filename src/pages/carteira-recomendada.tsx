@@ -184,7 +184,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
       if (localData) {
         setWallet([...localData.wallet]);
         setAssets([...localData.assets]);
-        setLastUpdate(localData.lastUpdate);
+        setLastUpdate(localData.lastUpdate || "NEW");
       }
     }
     loadData();
