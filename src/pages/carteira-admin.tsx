@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Input, Text } from "@chakra-ui/react";
-import { signIn, useSession } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import PageHeader from "../components/PageHeader";
@@ -106,3 +106,16 @@ const CarteiraAdminPage = () => {
 };
 
 export default CarteiraAdminPage;
+
+export async function getServerSideProps(context) {
+  const session = await getSession(context);
+
+  if (session?.status < 2) {
+    return {
+      redirect: {
+        destination: "/contrate",
+        permanent: false,
+      },
+    };
+  }
+}
