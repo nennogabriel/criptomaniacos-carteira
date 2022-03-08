@@ -59,10 +59,10 @@ export default function CarteiraRecomendada({ binancePrices }) {
       JSON.stringify({
         wallet,
         assets,
-        lastUpdate,
+        lastUpdate: today,
       })
     );
-  }, [assets, lastUpdate, wallet]);
+  }, [assets, today, wallet]);
 
   const portifolioList = useMemo(() => {
     const data = wallet.map((item) => {
@@ -196,7 +196,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
     async function getFaunaData() {
       const response = await api.get("/fauna/wallet");
       setAssets(response.data.assets.sort());
-      alert("dados atualizados");
     }
 
     if (lastUpdate === "LOADING") {
@@ -328,7 +327,9 @@ export default function CarteiraRecomendada({ binancePrices }) {
                           <Text
                             as="span"
                             color={
-                              c.percent.actual * 100 - 10 > 10 ? "green" : "red"
+                              c.percent.actual * 100 - 10 >= 10
+                                ? "green"
+                                : "red"
                             }
                           >
                             ({(c.percent.actual * 100 - 10).toFixed(1)}%)
