@@ -327,9 +327,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
                           <Text
                             as="span"
                             color={
-                              c.percent.actual * 100 - 10 >= 10
-                                ? "green"
-                                : "red"
+                              c.percent.actual * 100 - 10 > 0 ? "green" : "red"
                             }
                           >
                             ({(c.percent.actual * 100 - 10).toFixed(1)}%)
