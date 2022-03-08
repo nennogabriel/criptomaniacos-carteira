@@ -53,7 +53,12 @@ export default function CarteiraRecomendada({ binancePrices }) {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const saveData = useCallback(() => {
+  const saveData = useCallback(async () => {
+    if (assets.length === 0) {
+      const response = await api.get("/fauna/wallet");
+      setAssets(response.data.assets.sort());
+      return;
+    }
     localStorage.setItem(
       "carteira-recomendada",
       JSON.stringify({
@@ -176,21 +181,21 @@ export default function CarteiraRecomendada({ binancePrices }) {
     );
   }
 
-  useEffect(() => {
-    async function loadData() {
-      const localData = JSON.parse(
-        await localStorage.getItem("carteira-recomendada")
-      );
-      if (localData) {
-        setWallet([...localData.wallet]);
-        setAssets([...localData.assets]);
-        setLastUpdate(
-          localData.lastUpdate === "LOADING" ? "NEW" : localData.lastUpdate
-        );
-      }
-    }
-    loadData();
-  }, []);
+  // useEffect(() => {
+  //   async function loadData() {
+  //     const localData = JSON.parse(
+  //       await localStorage.getItem("carteira-recomendada")
+  //     );
+  //     if (localData) {
+  //       setWallet([...localData.wallet]);
+  //       setAssets([...localData.assets]);
+  //       setLastUpdate(
+  //         localData.lastUpdate === "LOADING" ? "NEW" : localData.lastUpdate
+  //       );
+  //     }
+  //   }
+  //   loadData();
+  // }, []);
 
   useEffect(() => {
     async function getFaunaData() {
@@ -199,6 +204,16 @@ export default function CarteiraRecomendada({ binancePrices }) {
     }
 
     if (lastUpdate === "LOADING") {
+      const localData = JSON.parse(
+        localStorage.getItem("carteira-recomendada")
+      );
+      if (localData) {
+        setWallet([...localData.wallet]);
+        setAssets([...localData.assets]);
+        setLastUpdate(
+          localData.lastUpdate === "LOADING" ? "NEW" : localData.lastUpdate
+        );
+      }
       return;
     }
 
@@ -206,6 +221,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
       getFaunaData();
       setLastUpdate(today);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastUpdate]);
 
   useEffect(() => {
