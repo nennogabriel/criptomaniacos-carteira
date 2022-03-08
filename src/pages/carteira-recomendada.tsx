@@ -23,27 +23,17 @@ import {
 import axios from "axios";
 import { getSession, signIn, useSession } from "next-auth/react";
 import Head from "next/head";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { FaEdit, FaWindowClose, FaCheckSquare } from "react-icons/fa";
 import PageHeader from "../components/PageHeader";
+import { api } from "../services/api";
 
-const data = {
-  title: "Carteira recomendada",
-  assets: [
-    { ticker: "ATOM", qtd: 0, weight: 10 },
-    { ticker: "AVAX", qtd: 0, weight: 10 },
-    { ticker: "FTT", qtd: 0, weight: 10 },
-    { ticker: "FTM", qtd: 0, weight: 10 },
-    { ticker: "LUNA", qtd: 0, weight: 10 },
-    { ticker: "KLAY", qtd: 0, weight: 10 },
-    { ticker: "MATIC", qtd: 0, weight: 10 },
-    { ticker: "NEAR", qtd: 0, weight: 10 },
-    { ticker: "SAND", qtd: 0, weight: 10 },
-    { ticker: "YFI", qtd: 0, weight: 10 },
-  ].sort(),
-  changes: [],
-};
+interface AssetsProps {
+  ticker: string;
+  qtd: number;
+  weight: number;
+}
 
 var portifolioSum = {
   USDT: 0,
@@ -51,16 +41,31 @@ var portifolioSum = {
   weight: 0,
 };
 
+const today = new Date().toISOString().split("T")[0];
+
 export default function CarteiraRecomendada({ binancePrices }) {
   const session = useSession();
-  const [cryptos, setCryptos] = useState(data.assets);
+  const [wallet, setWallet] = useState<Array<AssetsProps>>([]);
+  const [assets, setAssets] = useState([]);
+  const [lastUpdate, setLastUpdate] = useState("LOADING");
 
   const [quote, setQuote] = useState("USDT");
   const [balanceType, setBalanceType] = useState("TOKEN");
   const [cash, setCash] = useState(0);
 
+  const saveData = useCallback(() => {
+    localStorage.setItem(
+      "carteira-recomendada",
+      JSON.stringify({
+        wallet,
+        assets,
+        lastUpdate,
+      })
+    );
+  }, [assets, lastUpdate, wallet]);
+
   const portifolioList = useMemo(() => {
-    const data = cryptos.map((item) => {
+    const data = wallet.map((item) => {
       const { ticker, qtd, weight } = item;
       const quotes = Object.keys(binancePrices)
         .filter((item) => item.startsWith(ticker))
@@ -102,32 +107,40 @@ export default function CarteiraRecomendada({ binancePrices }) {
     });
 
     return data;
-  }, [cryptos, binancePrices, portifolioSum]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wallet, binancePrices, portifolioSum]);
 
   portifolioSum = useMemo(
-    () => ({
-      USDT:
-        portifolioList
-          .map((item) => item.quote.USDT)
-          .reduce((acc, item) => acc + item) + cash,
-      BTC:
-        portifolioList
-          .map((item) => item.quote.BTC)
-          .reduce((acc, item) => acc + item) +
-        cash / binancePrices["BTCUSDT"],
-      weight: portifolioList
-        .map((item) => item.weight)
-        .reduce((acc, item) => acc + item),
-    }),
+    () =>
+      portifolioList.length > 0
+        ? {
+            USDT:
+              portifolioList
+                .map((item) => item.quote.USDT)
+                .reduce((acc, item) => acc + item) + cash,
+            BTC:
+              portifolioList
+                .map((item) => item.quote.BTC)
+                .reduce((acc, item) => acc + item) +
+              cash / binancePrices["BTCUSDT"],
+            weight: portifolioList
+              .map((item) => item.weight)
+              .reduce((acc, item) => acc + item),
+          }
+        : {
+            USDT: 0,
+            BTC: 0,
+            weight: 0,
+          },
     [binancePrices, cash, portifolioList]
   );
 
-  function handleQtdEditableSubmit(crypto, newData) {
-    const updateCryptos = cryptos.map((c) => ({
+  function handleQtdEditableSubmit(item, newData) {
+    const updateWallet = wallet.map((c) => ({
       ...c,
-      qtd: c.ticker === crypto.ticker ? newData : c.qtd,
+      qtd: c.ticker === item.ticker ? newData : c.qtd,
     }));
-    setCryptos(updateCryptos);
+    setWallet(updateWallet);
   }
 
   function EditableControls() {
@@ -162,6 +175,53 @@ export default function CarteiraRecomendada({ binancePrices }) {
       </Flex>
     );
   }
+
+  useEffect(() => {
+    async function loadData() {
+      const localData = JSON.parse(
+        await localStorage.getItem("carteira-recomendada")
+      );
+      if (localData) {
+        setWallet([...localData.wallet]);
+        setAssets([...localData.assets]);
+        setLastUpdate(localData.lastUpdate);
+      }
+    }
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    async function getFaunaData() {
+      const response = await api.get("/fauna/wallet");
+      setAssets(response.data.assets.sort());
+      alert("dados atualizados");
+    }
+
+    if (lastUpdate === "LOADING") {
+      return;
+    }
+
+    if (lastUpdate !== today) {
+      getFaunaData();
+      setLastUpdate(today);
+    }
+  }, [lastUpdate]);
+
+  useEffect(() => {
+    const walletUpdated = assets.map((asset) => {
+      const walletItem = wallet.filter((item) => item.ticker === asset);
+      if (walletItem.length > 0) {
+        return walletItem[0];
+      }
+      return { ticker: asset, qtd: 0, weight: 10 };
+    });
+    setWallet(walletUpdated.sort());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assets]);
+
+  useEffect(() => {
+    saveData();
+  }, [saveData]);
 
   if (session.status === "loading") {
     return <p>Loading...</p>;

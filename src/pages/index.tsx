@@ -1,11 +1,12 @@
-import { Box, Button, Text } from "@chakra-ui/react";
+import { Box, Button } from "@chakra-ui/react";
 import Head from "next/head";
-import React, { useState } from "react";
+import React from "react";
 import PageHeader from "../components/PageHeader";
 import NextLink from "next/link";
-import { api } from "../services/api";
 
 const HomePage = () => {
+  console.log(new Date().toISOString());
+
   return (
     <>
       <Head>
