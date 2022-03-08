@@ -41,8 +41,6 @@ var portifolioSum = {
   weight: 0,
 };
 
-const today = new Date().toISOString().split("T")[0];
-
 export default function CarteiraRecomendada({ binancePrices }) {
   const session = useSession();
   const [wallet, setWallet] = useState<Array<AssetsProps>>([]);
@@ -52,6 +50,8 @@ export default function CarteiraRecomendada({ binancePrices }) {
   const [quote, setQuote] = useState("USDT");
   const [balanceType, setBalanceType] = useState("TOKEN");
   const [cash, setCash] = useState(0);
+
+  const today = new Date().toISOString().split("T")[0];
 
   const saveData = useCallback(() => {
     localStorage.setItem(
@@ -184,7 +184,9 @@ export default function CarteiraRecomendada({ binancePrices }) {
       if (localData) {
         setWallet([...localData.wallet]);
         setAssets([...localData.assets]);
-        setLastUpdate(localData.lastUpdate || "NEW");
+        setLastUpdate(
+          localData.lastUpdate === "LOADING" ? "NEW" : localData.lastUpdate
+        );
       }
     }
     loadData();
