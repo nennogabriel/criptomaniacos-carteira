@@ -1,7 +1,8 @@
 import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
+import CredentialsProvider from "next-auth/providers/credentials";
+
 // import GoogleProvider from "next-auth/providers/google";
-// import FacebookProvider from "next-auth/providers/facebook";
 
 import { query as q } from "faunadb";
 import { fauna } from "../../../services/fauna";
@@ -21,6 +22,14 @@ export default NextAuth({
     GithubProvider({
       clientId: process.env.GITHUB_CLIENT_ID,
       clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
+    CredentialsProvider({
+      name: "Telegram",
+      credentials: {},
+      async authorize(credentials, req) {
+        
+        return null;
+      },
     }),
   ],
   callbacks: {
