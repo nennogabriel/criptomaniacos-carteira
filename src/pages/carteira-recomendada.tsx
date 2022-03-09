@@ -35,41 +35,47 @@ interface AssetsProps {
   weight: number;
 }
 
-var portifolioSum = {
-  USDT: 0,
-  BTC: 0,
-  weight: 0,
-};
-
 export default function CarteiraRecomendada({ binancePrices }) {
   const session = useSession();
   const [wallet, setWallet] = useState<Array<AssetsProps>>([]);
   const [assets, setAssets] = useState([]);
   const [lastUpdate, setLastUpdate] = useState("LOADING");
+  const [saved, setSaved] = useState(true);
 
   const [quote, setQuote] = useState("USDT");
   const [balanceType, setBalanceType] = useState("TOKEN");
   const [cash, setCash] = useState(0);
 
+  const [portifolioList, setPortifolioList] = useState([]);
+
+  const portifolioSum = useMemo(() => {
+    const data =
+      portifolioList.length > 0
+        ? {
+            USDT:
+              portifolioList
+                .map((item) => item.quote.USDT)
+                .reduce((acc, item) => acc + item) + cash,
+            BTC:
+              portifolioList
+                .map((item) => item.quote.BTC)
+                .reduce((acc, item) => acc + item) +
+              cash / binancePrices["BTCUSDT"],
+            weight: portifolioList
+              .map((item) => item.weight)
+              .reduce((acc, item) => acc + item),
+          }
+        : {
+            USDT: 0,
+            BTC: 0,
+            weight: 0,
+          };
+    return data;
+  }, [binancePrices, cash, portifolioList]);
+
   const today = new Date().toISOString().split("T")[0];
 
-  const saveData = useCallback(async () => {
-    if (assets.length === 0) {
-      const response = await api.get("/fauna/wallet");
-      setAssets(response.data.assets.sort());
-      return;
-    }
-    localStorage.setItem(
-      "carteira-recomendada",
-      JSON.stringify({
-        wallet,
-        assets,
-        lastUpdate: today,
-      })
-    );
-  }, [assets, today, wallet]);
-
-  const portifolioList = useMemo(() => {
+  const updateAndCalculatePortifolio = useCallback(() => {
     const data = wallet.map((item) => {
       const { ticker, qtd, weight } = item;
       const quotes = Object.keys(binancePrices)
@@ -111,33 +117,46 @@ export default function CarteiraRecomendada({ binancePrices }) {
       return { ...item, quote, quoteShow, hasUSDT, percent, action };
     });
 
-    return data;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wallet, binancePrices, portifolioSum]);
+    setPortifolioList(data);
+  }, [binancePrices, portifolioSum, wallet]);
 
-  portifolioSum = useMemo(
-    () =>
-      portifolioList.length > 0
-        ? {
-            USDT:
-              portifolioList
-                .map((item) => item.quote.USDT)
-                .reduce((acc, item) => acc + item) + cash,
-            BTC:
-              portifolioList
-                .map((item) => item.quote.BTC)
-                .reduce((acc, item) => acc + item) +
-              cash / binancePrices["BTCUSDT"],
-            weight: portifolioList
-              .map((item) => item.weight)
-              .reduce((acc, item) => acc + item),
-          }
+  const saveData = useCallback(() => {
+    localStorage.setItem(
+      "carteira-recomendada",
+      JSON.stringify({ wallet, assets, lastUpdate })
+    );
+    setSaved(true);
+  }, [assets, lastUpdate, wallet]);
+
+  const loadLastWalletData = useCallback(async () => {
+    if (lastUpdate !== today) {
+      const response = await api.get("/fauna/wallet");
+      setAssets(response.data.assets);
+      setLastUpdate(today);
+    }
+  }, [lastUpdate, today]);
+
+  const updateLastWalletData = useCallback(() => {
+    const updatedWallet = assets.map((asset) => {
+      const hasInWallet = wallet.filter((item) => item.ticker === asset);
+
+      return hasInWallet.length > 0
+        ? hasInWallet[0]
         : {
-            USDT: 0,
-            BTC: 0,
-            weight: 0,
-          },
-    [binancePrices, cash, portifolioList]
+            ticker: asset,
+            qtd: 0,
+            weight: 10,
+          };
+    });
+    setWallet(updatedWallet.sort());
+  }, [assets, wallet]);
+
+  const calculateAndShow = useCallback(
+    (e) => {
+      e.preventDefault();
+      updateAndCalculatePortifolio();
+    },
+    [updateAndCalculatePortifolio]
   );
 
   function handleQtdEditableSubmit(item, newData) {
@@ -145,7 +164,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
       ...c,
       qtd: c.ticker === item.ticker ? newData : c.qtd,
     }));
-    setWallet(updateWallet);
+    setWallet(updateWallet.sort());
   }
 
   function EditableControls() {
@@ -181,64 +200,32 @@ export default function CarteiraRecomendada({ binancePrices }) {
     );
   }
 
-  // useEffect(() => {
-  //   async function loadData() {
-  //     const localData = JSON.parse(
-  //       await localStorage.getItem("carteira-recomendada")
-  //     );
-  //     if (localData) {
-  //       setWallet([...localData.wallet]);
-  //       setAssets([...localData.assets]);
-  //       setLastUpdate(
-  //         localData.lastUpdate === "LOADING" ? "NEW" : localData.lastUpdate
-  //       );
-  //     }
-  //   }
-  //   loadData();
-  // }, []);
+  useEffect(() => {
+    const localData = JSON.parse(localStorage.getItem("carteira-recomendada"));
+    if (!!localData) {
+      setAssets(localData.assets.sort());
+      setWallet(localData.wallet.sort());
+      setLastUpdate(localData.lastUpdate);
+      updateAndCalculatePortifolio();
+    }
+  }, []);
 
   useEffect(() => {
-    async function getFaunaData() {
-      const response = await api.get("/fauna/wallet");
-      setAssets(response.data.assets.sort());
-    }
+    const localStorageString = localStorage.getItem("carteira-recomendada");
+    const isEqual =
+      localStorageString == JSON.stringify({ wallet, assets, lastUpdate });
+    setSaved(isEqual);
+  }, [assets, lastUpdate, wallet]);
 
-    if (lastUpdate === "LOADING") {
-      const localData = JSON.parse(
-        localStorage.getItem("carteira-recomendada")
-      );
-      if (localData) {
-        setWallet([...localData.wallet]);
-        setAssets([...localData.assets]);
-        setLastUpdate(
-          localData.lastUpdate === "LOADING" ? "NEW" : localData.lastUpdate
-        );
-      }
+  useEffect(() => {}, []);
+
+  function handleOnChangeCaixaInput(e) {
+    if (e.target.value !== 0 && String(e.target.value)[0] === "0") {
+      setCash(e.target.value[1]);
       return;
     }
-
-    if (lastUpdate !== today) {
-      getFaunaData();
-      setLastUpdate(today);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lastUpdate]);
-
-  useEffect(() => {
-    const walletUpdated = assets.map((asset) => {
-      const walletItem = wallet.filter((item) => item.ticker === asset);
-      if (walletItem.length > 0) {
-        return walletItem[0];
-      }
-      return { ticker: asset, qtd: 0, weight: 10 };
-    });
-    setWallet(walletUpdated.sort());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assets]);
-
-  useEffect(() => {
-    saveData();
-  }, [saveData]);
+    setCash(Number(e.target.value));
+  }
 
   if (session.status === "loading") {
     return <p>Loading...</p>;
@@ -259,22 +246,73 @@ export default function CarteiraRecomendada({ binancePrices }) {
       <Box m="0 auto" maxW="90%" w="1200px">
         <PageHeader />
         <Box>
-          <ButtonGroup size="sm" isAttached variant="outline">
-            <Button
-              mr="-px"
-              colorScheme={quote === "USDT" ? "green" : "gray"}
-              onClick={() => setQuote("USDT")}
-            >
-              USDT
-            </Button>
-            <Button
-              mr="-px"
-              colorScheme={quote === "BTC" ? "yellow" : "gray"}
-              onClick={() => setQuote("BTC")}
-            >
-              BTC
-            </Button>
-          </ButtonGroup>
+          <Flex>
+            <ButtonGroup size="sm" isAttached variant="outline" mr={8}>
+              <Button
+                mr="-px"
+                colorScheme={quote === "USDT" ? "green" : "gray"}
+                onClick={() => setQuote("USDT")}
+              >
+                USDT
+              </Button>
+              <Button
+                mr="-px"
+                colorScheme={quote === "BTC" ? "yellow" : "gray"}
+                onClick={() => setQuote("BTC")}
+              >
+                BTC
+              </Button>
+            </ButtonGroup>
+
+            <ButtonGroup size="sm" isAttached variant="outline">
+              <Button
+                mr="-px"
+                colorScheme="gray"
+                onClick={loadLastWalletData}
+                disabled={lastUpdate === today}
+              >
+                Carregar Carteira
+              </Button>
+              <Button
+                mr="-px"
+                colorScheme="gray"
+                onClick={updateLastWalletData}
+                disabled={wallet.length === 10}
+              >
+                Registrar Carteira
+              </Button>
+
+              <Button
+                mr="-px"
+                colorScheme="gray"
+                onClick={saveData}
+                disabled={saved}
+              >
+                Salvar
+              </Button>
+              <Button
+                mr="-px"
+                colorScheme="gray"
+                onClick={() => localStorage.removeItem("carteira-recomendada")}
+              >
+                Clear Cache
+              </Button>
+            </ButtonGroup>
+          </Flex>
+          <form onSubmit={calculateAndShow}>
+            <Flex mt={4} align="center">
+              <Text mr={4}>Caixa (USDT):</Text>
+              <Input
+                type="number"
+                value={cash}
+                onChange={handleOnChangeCaixaInput}
+                w={40}
+                mr={4}
+              />
+              <Button type="submit">Carregar / Atualizar</Button>
+            </Flex>
+          </form>
+
           <Table>
             <TableCaption>Carteira Criptomaniacos</TableCaption>
             <Thead>
@@ -383,14 +421,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
               </Tr>
             </Tfoot>
           </Table>
-          <Box>
-            Caixa (USDT):
-            <Input
-              type="number"
-              value={cash}
-              onChange={(e) => setCash(Number(e.target.value) || 0)}
-            />
-          </Box>
         </Box>
       </Box>
     </div>
