@@ -424,32 +424,20 @@ export default function CarteiraRecomendada({ binancePrices }) {
                     ) : (
                       <>
                         <Td>
-                          {action.percent.actual.toFixed(1) !== "NaN" ? (
-                            <>
-                              <Text mr={4}>
-                                {(action.percent.actual * 100).toFixed(1)}%
-                              </Text>
-                              {action.percent.actual === 10 ? (
-                                ""
-                              ) : (
-                                <Text
-                                  as="span"
-                                  color={
-                                    action.percent.actual * 100 - 10 >= 0
-                                      ? "green"
-                                      : "red"
-                                  }
-                                >
-                                  (
-                                  {(action.percent.actual * 100 - 10).toFixed(
-                                    1
-                                  )}
-                                  %)
-                                </Text>
-                              )}
-                            </>
-                          ) : (
+                          {portfolioChanged ? (
                             <Text>-</Text>
+                          ) : (
+                            <Text
+                              as="span"
+                              color={
+                                action.percent.actual * 100 - 10 >= 0
+                                  ? "green"
+                                  : "red"
+                              }
+                            >
+                              ({(action.percent.actual * 100 - 10).toFixed(1)}
+                              %)
+                            </Text>
                           )}
                         </Td>
 
