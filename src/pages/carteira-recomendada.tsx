@@ -39,20 +39,34 @@ export default function CarteiraRecomendada({ binancePrices }) {
   const session = useSession();
   const [wallet, setWallet] = useState<Array<AssetsProps>>([]);
   const [assets, setAssets] = useState([]);
-  const [lastUpdate, setLastUpdate] = useState("LOADING");
+  const [lastUpdate, setLastUpdate] = useState("");
   const [saved, setSaved] = useState(true);
 
   const [quote, setQuote] = useState("USDT");
   const [balanceType, setBalanceType] = useState("TOKEN");
   const [cash, setCash] = useState(0);
 
-  // const [portfolioList, setPortfolioList] = useState([]);
   const [portfolioAction, setPortfolioAction] = useState([]);
+  const [portfolioChanged, setPortfolioChanged] = useState(false);
 
   const walletAssets = useMemo(() => {
     const data = wallet.map((item) => item.ticker);
     return data.sort();
   }, [wallet]);
+
+  const walletMissingAssets = useMemo(() => {
+    const data = walletAssets.filter(
+      (walletAsset) => !assets.some((asset) => asset === walletAsset)
+    );
+    return data;
+  }, [assets, walletAssets]);
+
+  const assetsMissingWallet = useMemo(() => {
+    const data = assets.filter(
+      (asset) => !walletAssets.some((walletAsset) => walletAsset === asset)
+    );
+    return data;
+  }, [assets, walletAssets]);
 
   const portfolioAssets = useMemo(() => {
     const data = wallet.map((item) => {
@@ -153,7 +167,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
   const loadLastWalletData = useCallback(async () => {
     if (lastUpdate !== today) {
       const response = await api.get("/fauna/wallet");
-      setAssets(response.data.assets);
+      setAssets(response.data.assets.sort());
       setLastUpdate(today);
     }
   }, [lastUpdate, today]);
@@ -177,6 +191,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
     (e) => {
       e.preventDefault();
       updateAndCalculatePortfolio();
+      setPortfolioChanged(false);
     },
     [updateAndCalculatePortfolio]
   );
@@ -187,6 +202,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
       qtd: c.ticker === item.ticker ? newData : c.qtd,
     }));
     setWallet(updateWallet.sort());
+    setPortfolioChanged(true);
   }
 
   function EditableControls() {
@@ -268,14 +284,12 @@ export default function CarteiraRecomendada({ binancePrices }) {
           <Flex>
             <ButtonGroup size="sm" isAttached variant="outline" mr={8}>
               <Button
-                mr="-px"
                 colorScheme={quote === "USDT" ? "green" : "gray"}
                 onClick={() => setQuote("USDT")}
               >
                 USDT
               </Button>
               <Button
-                mr="-px"
                 colorScheme={quote === "BTC" ? "yellow" : "gray"}
                 onClick={() => setQuote("BTC")}
               >
@@ -285,7 +299,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
 
             <ButtonGroup size="sm" isAttached variant="outline">
               <Button
-                mr="-px"
                 colorScheme="gray"
                 onClick={loadLastWalletData}
                 disabled={lastUpdate === today}
@@ -293,7 +306,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
                 Carregar Carteira
               </Button>
               <Button
-                mr="-px"
                 colorScheme="gray"
                 onClick={updateLastWalletData}
                 disabled={
@@ -303,26 +315,16 @@ export default function CarteiraRecomendada({ binancePrices }) {
                 Registrar Carteira
               </Button>
 
-              <Button
-                mr="-px"
-                colorScheme="gray"
-                onClick={saveData}
-                disabled={saved}
-              >
+              <Button colorScheme="gray" onClick={saveData} disabled={saved}>
                 Salvar
               </Button>
               <Button
-                mr="-px"
                 colorScheme="gray"
                 onClick={() => localStorage.removeItem("carteira-recomendada")}
               >
                 Clear Cache
               </Button>
-              <Button
-                mr="-px"
-                colorScheme="gray"
-                onClick={() => setLastUpdate("bug")}
-              >
+              <Button colorScheme="gray" onClick={() => setLastUpdate("bug")}>
                 change day
               </Button>
             </ButtonGroup>
@@ -341,6 +343,20 @@ export default function CarteiraRecomendada({ binancePrices }) {
             </Flex>
           </form>
 
+          {portfolioChanged && (
+            <Text py={4}>
+              Dados devem ser recalculados, favor clicar no botão acima para
+              atualizar.
+            </Text>
+          )}
+
+          {assetsMissingWallet.length > 0 && (
+            <Text>
+              Ativos para entrar na carteira:{" "}
+              {JSON.stringify(assetsMissingWallet)}
+            </Text>
+          )}
+
           <Table>
             <TableCaption>Carteira Criptomaniacos</TableCaption>
             <Thead>
@@ -354,14 +370,12 @@ export default function CarteiraRecomendada({ binancePrices }) {
                   <br />
                   <ButtonGroup size="sm" isAttached variant="outline">
                     <Button
-                      mr="-px"
                       colorScheme={balanceType === "TOKEN" ? "purple" : "gray"}
                       onClick={() => setBalanceType("TOKEN")}
                     >
                       TOKEN
                     </Button>
                     <Button
-                      mr="-px"
                       colorScheme={
                         balanceType === "BASE"
                           ? quote === "USDT"
