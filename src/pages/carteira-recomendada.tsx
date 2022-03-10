@@ -46,36 +46,10 @@ export default function CarteiraRecomendada({ binancePrices }) {
   const [balanceType, setBalanceType] = useState("TOKEN");
   const [cash, setCash] = useState(0);
 
-  const [portifolioList, setPortifolioList] = useState([]);
+  // const [portfolioList, setPortfolioList] = useState([]);
+  const [portfolioAction, setPortfolioAction] = useState([]);
 
-  const portifolioSum = useMemo(() => {
-    const data =
-      portifolioList.length > 0
-        ? {
-            USDT:
-              portifolioList
-                .map((item) => item.quote.USDT)
-                .reduce((acc, item) => acc + item) + cash,
-            BTC:
-              portifolioList
-                .map((item) => item.quote.BTC)
-                .reduce((acc, item) => acc + item) +
-              cash / binancePrices["BTCUSDT"],
-            weight: portifolioList
-              .map((item) => item.weight)
-              .reduce((acc, item) => acc + item),
-          }
-        : {
-            USDT: 0,
-            BTC: 0,
-            weight: 0,
-          };
-    return data;
-  }, [binancePrices, cash, portifolioList]);
-
-  const today = new Date().toISOString().split("T")[0];
-
-  const updateAndCalculatePortifolio = useCallback(() => {
+  const portfolioAssets = useMemo(() => {
     const data = wallet.map((item) => {
       const { ticker, qtd, weight } = item;
       const quotes = Object.keys(binancePrices)
@@ -92,33 +66,76 @@ export default function CarteiraRecomendada({ binancePrices }) {
         USDT: quote.USDT.toFixed(3),
       };
       const hasUSDT = quotes.some((item) => item === "USDT");
+
+      return { ...item, quote, quoteShow, hasUSDT };
+    });
+
+    return data;
+  }, [binancePrices, wallet]);
+
+  const portfolioSum = useMemo(() => {
+    const data =
+      portfolioAssets.length > 0
+        ? {
+            USDT:
+              portfolioAssets
+                .map((item) => item.quote.USDT)
+                .reduce((acc, item) => acc + item) + cash,
+            BTC:
+              portfolioAssets
+                .map((item) => item.quote.BTC)
+                .reduce((acc, item) => acc + item) +
+              cash / binancePrices["BTCUSDT"],
+            weight: portfolioAssets
+              .map((item) => item.weight)
+              .reduce((acc, item) => acc + item),
+          }
+        : {
+            USDT: 0,
+            BTC: 0,
+            weight: 0,
+          };
+    return data;
+  }, [binancePrices, cash, portfolioAssets]);
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const updateAndCalculatePortfolio = useCallback(() => {
+    const data = wallet.map((item) => {
+      const { ticker, qtd, weight } = item;
+      const quote = {
+        BTC: binancePrices[`${ticker}BTC`] * qtd,
+        USDT:
+          (binancePrices[`${ticker}USDT`] ||
+            binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`]) * qtd,
+      };
       const percent = {
-        ideal: weight / portifolioSum.weight,
-        actual: quote.USDT / portifolioSum.USDT,
+        ideal: weight / portfolioSum.weight,
+        actual: quote.USDT / portfolioSum.USDT,
       };
 
       const action = {
-        min: Math.abs(percent.ideal - percent.actual) * portifolioSum.USDT > 10,
+        min: Math.abs(percent.ideal - percent.actual) * portfolioSum.USDT > 10,
         text: percent.ideal > percent.actual ? "Comprar" : "Vender",
         quote: {
           USDT: (
-            Math.abs(percent.ideal - percent.actual) * portifolioSum.USDT
+            Math.abs(percent.ideal - percent.actual) * portfolioSum.USDT
           ).toFixed(2),
           BTC: (
-            Math.abs(percent.ideal - percent.actual) * portifolioSum.BTC
+            Math.abs(percent.ideal - percent.actual) * portfolioSum.BTC
           ).toFixed(8),
           TOKEN: (
-            (Math.abs(percent.ideal - percent.actual) * portifolioSum.USDT) /
+            (Math.abs(percent.ideal - percent.actual) * portfolioSum.USDT) /
             (binancePrices[`${ticker}USDT`] ||
               binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`])
           ).toFixed(5),
         },
       };
-      return { ...item, quote, quoteShow, hasUSDT, percent, action };
+      return { ...item, percent, action };
     });
 
-    setPortifolioList(data);
-  }, [binancePrices, portifolioSum, wallet]);
+    setPortfolioAction(data);
+  }, [binancePrices, portfolioSum, wallet]);
 
   const saveData = useCallback(() => {
     localStorage.setItem(
@@ -154,9 +171,9 @@ export default function CarteiraRecomendada({ binancePrices }) {
   const calculateAndShow = useCallback(
     (e) => {
       e.preventDefault();
-      updateAndCalculatePortifolio();
+      updateAndCalculatePortfolio();
     },
-    [updateAndCalculatePortifolio]
+    [updateAndCalculatePortfolio]
   );
 
   function handleQtdEditableSubmit(item, newData) {
@@ -206,7 +223,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
       setAssets(localData.assets.sort());
       setWallet(localData.wallet.sort());
       setLastUpdate(localData.lastUpdate);
-      updateAndCalculatePortifolio();
     }
   }, []);
 
@@ -216,8 +232,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
       localStorageString == JSON.stringify({ wallet, assets, lastUpdate });
     setSaved(isEqual);
   }, [assets, lastUpdate, wallet]);
-
-  useEffect(() => {}, []);
 
   function handleOnChangeCaixaInput(e) {
     if (e.target.value !== 0 && String(e.target.value)[0] === "0") {
@@ -297,6 +311,13 @@ export default function CarteiraRecomendada({ binancePrices }) {
               >
                 Clear Cache
               </Button>
+              <Button
+                mr="-px"
+                colorScheme="gray"
+                onClick={() => setLastUpdate("bug")}
+              >
+                change day
+              </Button>
             </ButtonGroup>
           </Flex>
           <form onSubmit={calculateAndShow}>
@@ -350,72 +371,93 @@ export default function CarteiraRecomendada({ binancePrices }) {
               </Tr>
             </Thead>
             <Tbody>
-              {portifolioList.map((c) => (
-                <Tr key={c.ticker}>
-                  <Td>{c.ticker}</Td>
-                  <Td>
-                    <Editable
-                      defaultValue={Number(c.qtd).toString()}
-                      onChange={(data) => (data == "" ? 0 : data)}
-                      onSubmit={(newData) =>
-                        handleQtdEditableSubmit(c, newData)
-                      }
-                      display="flex"
-                      justifyContent="space-around"
-                    >
-                      <EditablePreview />
-                      <Input type="number" as={EditableInput} />
-                      <EditableControls />
-                    </Editable>
-                  </Td>
-                  <Td>{c.quoteShow[quote]}</Td>
-                  <Td>
-                    {c.percent.actual.toFixed(1) !== "NaN" ? (
-                      <>
-                        <Text mr={4}>
-                          {(c.percent.actual * 100).toFixed(1)}%
-                        </Text>
-                        {c.percent.actual === 10 ? (
-                          ""
-                        ) : (
-                          <Text
-                            as="span"
-                            color={
-                              c.percent.actual * 100 - 10 >= 0 ? "green" : "red"
-                            }
-                          >
-                            ({(c.percent.actual * 100 - 10).toFixed(1)}%)
-                          </Text>
-                        )}
-                      </>
-                    ) : (
-                      <Text>-</Text>
-                    )}
-                  </Td>
+              {portfolioAssets.map((c) => {
+                const action = portfolioAction.filter(
+                  (item) => item.ticker === c.ticker
+                )[0];
 
-                  <Td>
-                    {c.action.min ? (
+                return (
+                  <Tr key={c.ticker}>
+                    <Td>{c.ticker}</Td>
+                    <Td>
+                      <Editable
+                        defaultValue={Number(c.qtd).toString()}
+                        onChange={(data) => (data == "" ? 0 : data)}
+                        onSubmit={(newData) =>
+                          handleQtdEditableSubmit(c, newData)
+                        }
+                        display="flex"
+                        justifyContent="space-around"
+                      >
+                        <EditablePreview />
+                        <Input type="number" as={EditableInput} />
+                        <EditableControls />
+                      </Editable>
+                    </Td>
+                    <Td>{c.quoteShow[quote]}</Td>
+                    {!action ? (
                       <>
-                        <p>
-                          {balanceType === "TOKEN"
-                            ? `${c.action.text} 
-                        ${c.action.quote.TOKEN} ${c.ticker}`
-                            : `${c.action.text}
-                        ${c.action.quote[quote]} ${quote}`}
-                        </p>
+                        <Td> - </Td>
+                        <Td> - </Td>
                       </>
                     ) : (
-                      "-"
+                      <>
+                        <Td>
+                          {action.percent.actual.toFixed(1) !== "NaN" ? (
+                            <>
+                              <Text mr={4}>
+                                {(action.percent.actual * 100).toFixed(1)}%
+                              </Text>
+                              {action.percent.actual === 10 ? (
+                                ""
+                              ) : (
+                                <Text
+                                  as="span"
+                                  color={
+                                    action.percent.actual * 100 - 10 >= 0
+                                      ? "green"
+                                      : "red"
+                                  }
+                                >
+                                  (
+                                  {(action.percent.actual * 100 - 10).toFixed(
+                                    1
+                                  )}
+                                  %)
+                                </Text>
+                              )}
+                            </>
+                          ) : (
+                            <Text>-</Text>
+                          )}
+                        </Td>
+
+                        <Td>
+                          {action.action.min ? (
+                            <>
+                              <p>
+                                {balanceType === "TOKEN"
+                                  ? `${action.action.text} 
+                        ${action.action.quote.TOKEN} ${action.ticker}`
+                                  : `${action.action.text}
+                        ${action.action.quote[quote]} ${quote}`}
+                              </p>
+                            </>
+                          ) : (
+                            "-"
+                          )}
+                        </Td>
+                      </>
                     )}
-                  </Td>
-                </Tr>
-              ))}
+                  </Tr>
+                );
+              })}
             </Tbody>
             <Tfoot>
               <Tr>
                 <Td>Total:</Td>
                 <Td> - </Td>
-                <Td> {portifolioSum[quote]} </Td>
+                <Td> {portfolioSum[quote]} </Td>
                 <Td> - </Td>
                 <Td> </Td>
               </Tr>

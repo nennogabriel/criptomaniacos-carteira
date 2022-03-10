@@ -27,7 +27,6 @@ export default NextAuth({
       name: "Telegram",
       credentials: {},
       async authorize(credentials, req) {
-        
         return null;
       },
     }),
@@ -52,12 +51,6 @@ export default NextAuth({
     },
 
     async signIn({ user, account, profile, email, credentials }) {
-      // const emails = ["nennogabriel@gmail.com", "bruno@criptomaniacos.io"];
-      // if (emails.some((email) => email === user.email)) {
-      //   return true;
-      // }
-
-      // return false;
       try {
         await fauna.query(
           q.If(
