@@ -49,6 +49,11 @@ export default function CarteiraRecomendada({ binancePrices }) {
   // const [portfolioList, setPortfolioList] = useState([]);
   const [portfolioAction, setPortfolioAction] = useState([]);
 
+  const walletAssets = useMemo(() => {
+    const data = wallet.map((item) => item.ticker);
+    return data.sort();
+  }, [wallet]);
+
   const portfolioAssets = useMemo(() => {
     const data = wallet.map((item) => {
       const { ticker, qtd, weight } = item;
@@ -291,7 +296,9 @@ export default function CarteiraRecomendada({ binancePrices }) {
                 mr="-px"
                 colorScheme="gray"
                 onClick={updateLastWalletData}
-                disabled={wallet.length === 10}
+                disabled={
+                  JSON.stringify(walletAssets) === JSON.stringify(assets)
+                }
               >
                 Registrar Carteira
               </Button>
