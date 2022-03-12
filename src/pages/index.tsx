@@ -5,8 +5,6 @@ import PageHeader from "../components/PageHeader";
 import NextLink from "next/link";
 
 const HomePage = () => {
-  console.log(new Date().toISOString());
-
   return (
     <>
       <Head>

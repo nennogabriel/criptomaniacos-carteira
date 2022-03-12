@@ -1,5 +1,5 @@
-import axios from "axios";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { binanceApi } from "../../../services/binanceApi";
 
 interface PairProps {
   [k: string]: string;
@@ -7,20 +7,16 @@ interface PairProps {
 
 var pairs: PairProps = {};
 
-const pairsUrlApi = "https://api.binance.com/api/v3/ticker/pair";
-
 const pairUpdateInterval = 3000000;
 var lastPairDataUpdate = 0;
 
 async function updatePairs() {
   if (new Date().getTime() < lastPairDataUpdate + pairUpdateInterval) return;
-  const responsePairs = await axios.get(pairsUrlApi);
+  const responsePairs = await binanceApi.get("/ticker/pair");
 
   pairs = Object.fromEntries(
     responsePairs.data.map((item) => [item.symbol.toUpperCase(), item.pair])
   );
-
-  console.log("pairs cache updated.");
 
   lastPairDataUpdate = new Date().getTime();
 }

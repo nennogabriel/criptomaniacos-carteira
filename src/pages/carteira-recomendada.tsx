@@ -20,7 +20,6 @@ import {
   useEditableControls,
   IconButton,
 } from "@chakra-ui/react";
-import axios from "axios";
 import { getSession, signIn, useSession } from "next-auth/react";
 import Head from "next/head";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -481,7 +480,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
 export async function getServerSideProps(context) {
   const session = await getSession(context);
 
-  if (session?.status === 0) {
+  if (session?.role < 2) {
     return {
       redirect: {
         destination: "/contrate",
@@ -490,9 +489,7 @@ export async function getServerSideProps(context) {
     };
   }
 
-  const response = await axios.get(
-    `${process.env.APP_HOST}/api/binance/getPrices`
-  );
+  const response = await api.get(`/binance/getPrices`);
   const binancePrices = response.data;
   return {
     props: { binancePrices },

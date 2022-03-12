@@ -1,5 +1,5 @@
-import axios from "axios";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { binanceApi } from "../../../../services/binanceApi";
 
 interface PriceProps {
   [k: string]: string;
@@ -7,20 +7,16 @@ interface PriceProps {
 
 var prices: PriceProps = {};
 
-const pricesUrlApi = "https://api.binance.com/api/v3/ticker/price";
-
 const priceUpdateInterval = 30000;
 var lastPriceDataUpdate = 0;
 
 async function updatePrices() {
   if (new Date().getTime() < lastPriceDataUpdate + priceUpdateInterval) return;
-  const responsePrices = await axios.get(pricesUrlApi);
+  const responsePrices = await binanceApi.get("/ticker/price");
 
   prices = Object.fromEntries(
     responsePrices.data.map((item) => [item.symbol.toUpperCase(), item.price])
   );
-
-  console.log("prices cache updated.");
 
   lastPriceDataUpdate = new Date().getTime();
 }

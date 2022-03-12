@@ -2,13 +2,11 @@ import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-// import GoogleProvider from "next-auth/providers/google";
-
 import { query as q } from "faunadb";
 import { fauna } from "../../../services/fauna";
 
 type UserProps = {
-  status?: string;
+  role?: string;
 };
 
 export default NextAuth({
@@ -18,6 +16,10 @@ export default NextAuth({
   jwt: {
     secret: process.env.NEXTAUTH_SECRET,
   },
+  pages: {
+    signIn: "/auth/signin",
+  },
+
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_CLIENT_ID,
@@ -27,12 +29,32 @@ export default NextAuth({
       name: "Telegram",
       credentials: {},
       async authorize(credentials, req) {
-        return null;
+        const data = req.query;
+        if (!data) {
+          return null;
+        }
+        const { id, username, first_name } = data;
+
+        const user = {
+          id,
+          name: `${first_name} (@${username})`,
+          email: `${id}@web.telegram.org`,
+        };
+
+        if (user) {
+          // Any object returned will be saved in `user` property of the JWT
+          return user;
+        } else {
+          // If you return null then an error will be displayed advising the user to check their details.
+          return null;
+
+          // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
+        }
       },
     }),
   ],
   callbacks: {
-    async session({ session, user, token }) {
+    session: async ({ session, user, token }) => {
       try {
         const faunaUserData = await fauna.query<UserProps>(
           q.Select(
@@ -42,7 +64,7 @@ export default NextAuth({
             )
           )
         );
-        session.status = faunaUserData.status || 0;
+        session.role = faunaUserData.role || 1;
       } catch (err) {
         console.log("Error when tried to get user status");
       }
@@ -50,7 +72,7 @@ export default NextAuth({
       return session;
     },
 
-    async signIn({ user, account, profile, email, credentials }) {
+    signIn: async ({ user, account, profile, email, credentials }) => {
       try {
         await fauna.query(
           q.If(
@@ -63,7 +85,7 @@ export default NextAuth({
             q.Create(q.Collection("users"), {
               data: {
                 email: user.email,
-                status: 0,
+                role: user?.role || 1,
               },
             }),
 

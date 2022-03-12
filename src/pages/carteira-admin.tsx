@@ -109,14 +109,14 @@ export default CarteiraAdminPage;
 
 export async function getServerSideProps(context) {
   const session = await getSession(context);
-
-  if (session?.status < 2) {
+  if (session?.role < 3) {
     return {
       redirect: {
-        destination: "/contrate",
+        destination: "/",
         permanent: false,
       },
     };
   }
+
   return { props: {} };
 }

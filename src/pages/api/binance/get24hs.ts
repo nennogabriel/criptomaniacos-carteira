@@ -1,5 +1,5 @@
-import axios from "axios";
 import type { NextApiRequest, NextApiResponse } from "next";
+import { binanceApi } from "../../../services/binanceApi";
 
 interface Change24Props {
   [k: string]: string;
@@ -7,15 +7,13 @@ interface Change24Props {
 
 var changes: Change24Props = {};
 
-const changesUrlApi = "https://api.binance.com/api/v3/ticker/24hr";
-
 const changeUpdateInterval = 30000;
 var lastChangeDataUpdate = 0;
 
 async function updateChanges() {
   if (new Date().getTime() < lastChangeDataUpdate + changeUpdateInterval)
     return;
-  const responseChanges = await axios.get(changesUrlApi);
+  const responseChanges = await binanceApi.get("/ticker/24hr");
 
   changes = Object.fromEntries(
     responseChanges.data.map((item) => [
@@ -23,8 +21,6 @@ async function updateChanges() {
       item.priceChangePercent,
     ])
   );
-
-  // console.log("changes cache updated.");
 
   lastChangeDataUpdate = new Date().getTime();
 }

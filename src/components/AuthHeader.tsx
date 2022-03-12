@@ -8,7 +8,7 @@ const AuthHeader: React.FC = () => {
   if (session) {
     return (
       <>
-        Signed in as {session.user.email} {session.status}
+        Signed in as {session.user.name} {session.role}
         <br />
         <Button onClick={() => signOut({ callbackUrl: "/" })}>Sign out</Button>
       </>
