@@ -36,13 +36,7 @@ export default NextAuth({
         }
         const { id, username, first_name } = data;
 
-        let responseTelegramBot = { data: { valid: false } };
-
-        try {
-          responseTelegramBot = await telegram.get(`/user_on_group/${id}`);
-        } catch (err) {
-          console.log(err);
-        }
+        let responseTelegramBot = await telegram.get(`/user_on_group/${id}`);
 
         const { valid } = responseTelegramBot.data;
 
@@ -92,13 +86,6 @@ export default NextAuth({
     },
 
     signIn: async ({ user, account, profile, email, credentials }) => {
-      if (user.email.endsWith("@web.telegram.org")) {
-        const responseTelegramBot = await telegram.get(
-          `/user_on_group/${user.id}`
-        );
-        const { valid } = responseTelegramBot.data;
-        user.role = valid ? 2 : 1;
-      }
       try {
         await fauna.query(
           q.If(
