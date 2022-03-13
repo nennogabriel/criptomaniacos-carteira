@@ -92,6 +92,13 @@ export default NextAuth({
     },
 
     signIn: async ({ user, account, profile, email, credentials }) => {
+      if (user.email.endsWith("@web.telegram.org")) {
+        const responseTelegramBot = await telegram.get(
+          `/user_on_group/${user.id}`
+        );
+        const { valid } = responseTelegramBot.data;
+        user.role = valid ? 2 : 1;
+      }
       try {
         await fauna.query(
           q.If(
