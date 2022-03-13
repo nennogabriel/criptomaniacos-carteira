@@ -36,25 +36,23 @@ export default NextAuth({
         }
         const { id, username, first_name } = data;
 
-        let responseTelegramBot = await telegram.get(`/user_on_group/${id}`);
+        try {
+          const responseTelegramBot = await telegram.get(
+            `/user_on_group/${id}`
+          );
 
-        const { valid } = responseTelegramBot.data;
+          const { valid } = responseTelegramBot.data;
 
-        const user = {
-          id,
-          name: `${first_name} (@${username})`,
-          email: `${id}@web.telegram.org`,
-          role: valid ? 2 : 1,
-        };
-
-        if (user) {
-          // Any object returned will be saved in `user` property of the JWT
+          const user = {
+            id,
+            name: `${first_name} (@${username})`,
+            email: `${id}@web.telegram.org`,
+            role: valid ? 2 : 1,
+          };
           return user;
-        } else {
-          // If you return null then an error will be displayed advising the user to check their details.
+        } catch (err) {
+          console.log(err);
           return null;
-
-          // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
         }
       },
     }),
