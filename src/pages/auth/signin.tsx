@@ -7,7 +7,6 @@ export default function SignIn({ providers }: any) {
   return (
     <>
       <PageHeader />
-
       <Center>
         {Object.values(providers).map((provider: any) => {
           if (provider.id === "credentials") {

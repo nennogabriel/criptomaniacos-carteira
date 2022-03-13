@@ -20,6 +20,7 @@ import {
   useEditableControls,
   IconButton,
 } from "@chakra-ui/react";
+import axios from "axios";
 import { getSession, signIn, useSession } from "next-auth/react";
 import Head from "next/head";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -53,12 +54,12 @@ export default function CarteiraRecomendada({ binancePrices }) {
     return data.sort();
   }, [wallet]);
 
-  const walletMissingAssets = useMemo(() => {
-    const data = walletAssets.filter(
-      (walletAsset) => !assets.some((asset) => asset === walletAsset)
-    );
-    return data;
-  }, [assets, walletAssets]);
+  // const walletMissingAssets = useMemo(() => {
+  //   const data = walletAssets.filter(
+  //     (walletAsset) => !assets.some((asset) => asset === walletAsset)
+  //   );
+  //   return data;
+  // }, [assets, walletAssets]);
 
   const assetsMissingWallet = useMemo(() => {
     const data = assets.filter(
@@ -165,7 +166,17 @@ export default function CarteiraRecomendada({ binancePrices }) {
 
   const loadLastWalletData = useCallback(async () => {
     if (lastUpdate !== today) {
-      const response = await api.get("/fauna/wallet");
+      let response = {
+        data: {
+          assets: [],
+        },
+      };
+      try {
+        response = await api.get("/fauna/wallet");
+      } catch (err) {
+        console.log("xabu");
+      }
+
       setAssets(response.data.assets.sort());
       setLastUpdate(today);
     }
@@ -489,7 +500,17 @@ export async function getServerSideProps(context) {
     };
   }
 
-  const response = await api.get(`/binance/getPrices`);
+  let response = {
+    data: [],
+  };
+
+  try {
+    response = await api.get(`/binance/getPrices`);
+  } catch (err) {
+    response = await axios.get(
+      `${process.env.NEXTAUTH_URL}/api/binance/getPrices`
+    );
+  }
   const binancePrices = response.data;
   return {
     props: { binancePrices },

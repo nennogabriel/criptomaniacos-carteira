@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { binanceApi } from "../../../services/binanceApi";
+import { binance } from "../../../services/api";
 
 interface Change24Props {
   [k: string]: string;
@@ -13,7 +13,7 @@ var lastChangeDataUpdate = 0;
 async function updateChanges() {
   if (new Date().getTime() < lastChangeDataUpdate + changeUpdateInterval)
     return;
-  const responseChanges = await binanceApi.get("/ticker/24hr");
+  const responseChanges = await binance.get("/ticker/24hr");
 
   changes = Object.fromEntries(
     responseChanges.data.map((item) => [
