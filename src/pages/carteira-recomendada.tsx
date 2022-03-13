@@ -439,7 +439,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
                           ) : (
                             <Text>
                               <Text as="span" mr={4}>
-                                {action.percent.actual * 100}%
+                                {(action.percent.actual * 100).toFixed(1)}%
                               </Text>
                               <Text
                                 as="span"
