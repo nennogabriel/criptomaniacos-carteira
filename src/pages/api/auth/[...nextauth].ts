@@ -92,9 +92,6 @@ export default NextAuth({
     },
 
     signIn: async ({ user, account, profile, email, credentials }) => {
-      if (user?.role) {
-        return true;
-      }
       try {
         await fauna.query(
           q.If(
