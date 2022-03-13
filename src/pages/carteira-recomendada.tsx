@@ -328,7 +328,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
               <Button colorScheme="gray" onClick={saveData} disabled={saved}>
                 Salvar
               </Button>
-              <Button
+              {/* <Button
                 colorScheme="gray"
                 onClick={() => localStorage.removeItem("carteira-recomendada")}
               >
@@ -336,7 +336,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
               </Button>
               <Button colorScheme="gray" onClick={() => setLastUpdate("bug")}>
                 change day
-              </Button>
+              </Button> */}
             </ButtonGroup>
           </Flex>
           <form onSubmit={calculateAndShow}>
