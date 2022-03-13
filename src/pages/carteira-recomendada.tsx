@@ -437,16 +437,21 @@ export default function CarteiraRecomendada({ binancePrices }) {
                           {portfolioChanged ? (
                             <Text>-</Text>
                           ) : (
-                            <Text
-                              as="span"
-                              color={
-                                action.percent.actual * 100 - 10 >= 0
-                                  ? "green"
-                                  : "red"
-                              }
-                            >
-                              ({(action.percent.actual * 100 - 10).toFixed(1)}
-                              %)
+                            <Text>
+                              <Text as="span" mr={4}>
+                                {action.percent.actual * 100}%
+                              </Text>
+                              <Text
+                                as="span"
+                                color={
+                                  action.percent.actual * 100 - 10 >= 0
+                                    ? "green"
+                                    : "red"
+                                }
+                              >
+                                ({(action.percent.actual * 100 - 10).toFixed(1)}
+                                %)
+                              </Text>
                             </Text>
                           )}
                         </Td>
