@@ -1,4 +1,4 @@
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
 import React from "react";
 import AuthHeader from "./AuthHeader";
 import NextLink from "next/link";
@@ -8,7 +8,9 @@ const PageHeader: React.FC = () => {
     <Box>
       <Flex justify="space-between">
         <NextLink href="/">
-          <Text as="a">Criptomaníacos</Text>
+          <Button as="a" variant="ghost">
+            <Text>Criptomaníacos</Text>
+          </Button>
         </NextLink>
         <AuthHeader />
       </Flex>

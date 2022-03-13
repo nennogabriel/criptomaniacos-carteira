@@ -5,7 +5,7 @@ import TelegramLoginButton from "../../components/TelegramLoginButton";
 
 export default function SignIn({ providers }: any) {
   return (
-    <>
+    <Box m="0 auto" maxW="90%" w="1200px">
       <PageHeader />
       <Center>
         {Object.values(providers).map((provider: any) => {
@@ -32,7 +32,7 @@ export default function SignIn({ providers }: any) {
           );
         })}
       </Center>
-    </>
+    </Box>
   );
 }
 
