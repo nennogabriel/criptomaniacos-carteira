@@ -36,7 +36,13 @@ export default NextAuth({
         }
         const { id, username, first_name } = data;
 
-        const responseTelegramBot = await telegram.get(`/user_on_group/${id}`);
+        let responseTelegramBot = { data: { valid: false } };
+
+        try {
+          responseTelegramBot = await telegram.get(`/user_on_group/${id}`);
+        } catch (err) {
+          console.log(err);
+        }
 
         const { valid } = responseTelegramBot.data;
 
