@@ -44,7 +44,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
 
   const [quote, setQuote] = useState("USDT");
   const [balanceType, setBalanceType] = useState("TOKEN");
-  const [cash, setCash] = useState(0);
+  const [cash, setCash] = useState("0");
 
   const [portfolioAction, setPortfolioAction] = useState([]);
   const [portfolioChanged, setPortfolioChanged] = useState(false);
@@ -99,12 +99,12 @@ export default function CarteiraRecomendada({ binancePrices }) {
             USDT:
               portfolioAssets
                 .map((item) => item.quote.USDT)
-                .reduce((acc, item) => acc + item) + cash,
+                .reduce((acc, item) => acc + item) + Number(cash),
             BTC:
               portfolioAssets
                 .map((item) => item.quote.BTC)
                 .reduce((acc, item) => acc + item) +
-              cash / binancePrices["BTCUSDT"],
+              Number(cash) / binancePrices["BTCUSDT"],
             weight: portfolioAssets
               .map((item) => item.weight)
               .reduce((acc, item) => acc + item),
@@ -256,11 +256,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
   }, [assets, lastUpdate, wallet]);
 
   function handleOnChangeCaixaInput(e) {
-    if (e.target.value !== 0 && String(e.target.value)[0] === "0") {
-      setCash(e.target.value[1]);
-      return;
-    }
-    setCash(Number(e.target.value));
+    setCash(e.target.value.replace(/^0+/, "") || "0");
   }
 
   if (session.status === "loading") {
