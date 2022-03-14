@@ -166,16 +166,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
 
   const loadLastWalletData = useCallback(async () => {
     if (lastUpdate !== today) {
-      let response = {
-        data: {
-          assets: [],
-        },
-      };
-      try {
-        response = await api.get("/fauna/wallet");
-      } catch (err) {
-        console.log("xabu");
-      }
+      const response = await api.get("/fauna/wallet");
 
       setAssets(response.data.assets.sort());
       setLastUpdate(today);
@@ -328,15 +319,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
               <Button colorScheme="gray" onClick={saveData} disabled={saved}>
                 Salvar
               </Button>
-              {/* <Button
-                colorScheme="gray"
-                onClick={() => localStorage.removeItem("carteira-recomendada")}
-              >
-                Clear Cache
-              </Button>
-              <Button colorScheme="gray" onClick={() => setLastUpdate("bug")}>
-                change day
-              </Button> */}
             </ButtonGroup>
           </Flex>
           <form onSubmit={calculateAndShow}>

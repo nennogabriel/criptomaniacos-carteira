@@ -51,7 +51,7 @@ export default NextAuth({
           };
           return user;
         } catch (err) {
-          console.log(err);
+          // console.log(err);
           return null;
         }
       },
@@ -60,11 +60,9 @@ export default NextAuth({
   callbacks: {
     jwt: async ({ token, user }) => {
       user?.role && (token.role = user.role);
-      console.log("token: ", token);
       return token;
     },
     session: async ({ session, user, token }) => {
-      console.log({ session, user, token });
       token?.role && (session.role = token.role);
       try {
         const faunaUserData = await fauna.query<UserProps>(
