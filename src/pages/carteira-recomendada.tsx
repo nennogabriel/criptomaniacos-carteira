@@ -31,8 +31,16 @@ import { api } from "../services/api";
 
 interface AssetsProps {
   ticker: string;
-  qtd: number;
+  qtd: string;
   weight: number;
+}
+
+function keepItNumberAboveZero(n: string) {
+  if (Number(n) < 0) {
+    return "0";
+  } else {
+    return n.replace(/^0+/, "") || "0";
+  }
 }
 
 export default function CarteiraRecomendada({ binancePrices }) {
@@ -70,15 +78,16 @@ export default function CarteiraRecomendada({ binancePrices }) {
 
   const portfolioAssets = useMemo(() => {
     const data = wallet.map((item) => {
-      const { ticker, qtd, weight } = item;
+      const { ticker, qtd } = item;
       const quotes = Object.keys(binancePrices)
         .filter((item) => item.startsWith(ticker))
         .map((item) => item.replace(ticker, ""));
       const quote = {
-        BTC: binancePrices[`${ticker}BTC`] * qtd,
+        BTC: binancePrices[`${ticker}BTC`] * Number(qtd),
         USDT:
           (binancePrices[`${ticker}USDT`] ||
-            binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`]) * qtd,
+            binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`]) *
+          Number(qtd),
       };
       const quoteShow = {
         BTC: quote.BTC.toFixed(8),
@@ -123,10 +132,11 @@ export default function CarteiraRecomendada({ binancePrices }) {
     const data = wallet.map((item) => {
       const { ticker, qtd, weight } = item;
       const quote = {
-        BTC: binancePrices[`${ticker}BTC`] * qtd,
+        BTC: binancePrices[`${ticker}BTC`] * Number(qtd),
         USDT:
           (binancePrices[`${ticker}USDT`] ||
-            binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`]) * qtd,
+            binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`]) *
+          Number(qtd),
       };
       const percent = {
         ideal: weight / portfolioSum.weight,
@@ -181,7 +191,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
         ? hasInWallet[0]
         : {
             ticker: asset,
-            qtd: 0,
+            qtd: "0",
             weight: 10,
           };
     });
@@ -200,7 +210,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
   function handleQtdEditableSubmit(item, newData) {
     const updateWallet = wallet.map((c) => ({
       ...c,
-      qtd: c.ticker === item.ticker ? newData : c.qtd,
+      qtd: c.ticker === item.ticker ? keepItNumberAboveZero(newData) : c.qtd,
     }));
     setWallet(updateWallet.sort());
     setPortfolioChanged(true);
@@ -256,7 +266,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
   }, [assets, lastUpdate, wallet]);
 
   function handleOnChangeCaixaInput(e) {
-    setCash(e.target.value.replace(/^0+/, "") || "0");
+    setCash(keepItNumberAboveZero(e.target.value));
   }
 
   if (session.status === "loading") {
@@ -391,7 +401,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
                     <Td>
                       <Editable
                         defaultValue={Number(c.qtd).toString()}
-                        onChange={(data) => (data == "" ? 0 : data)}
+                        onChange={(data) => keepItNumberAboveZero(data)}
                         onSubmit={(newData) =>
                           handleQtdEditableSubmit(c, newData)
                         }
