@@ -48,7 +48,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
   const [wallet, setWallet] = useState<Array<AssetsProps>>([]);
   const [assets, setAssets] = useState([]);
   const [lastUpdate, setLastUpdate] = useState("");
-  const [saved, setSaved] = useState(true);
 
   const [quote, setQuote] = useState("USDT");
   const [balanceType, setBalanceType] = useState("TOKEN");
@@ -61,13 +60,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
     const data = wallet.map((item) => item.ticker);
     return data.sort();
   }, [wallet]);
-
-  // const walletMissingAssets = useMemo(() => {
-  //   const data = walletAssets.filter(
-  //     (walletAsset) => !assets.some((asset) => asset === walletAsset)
-  //   );
-  //   return data;
-  // }, [assets, walletAssets]);
 
   const assetsMissingWallet = useMemo(() => {
     const data = assets.filter(
@@ -126,8 +118,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
     return data;
   }, [binancePrices, cash, portfolioAssets]);
 
-  const today = new Date().toISOString().split("T")[0];
-
   const updateAndCalculatePortfolio = useCallback(() => {
     const data = wallet.map((item) => {
       const { ticker, qtd, weight } = item;
@@ -167,21 +157,8 @@ export default function CarteiraRecomendada({ binancePrices }) {
   }, [binancePrices, portfolioSum, wallet]);
 
   const saveData = useCallback(() => {
-    localStorage.setItem(
-      "carteira-recomendada",
-      JSON.stringify({ wallet, assets, lastUpdate })
-    );
-    setSaved(true);
-  }, [assets, lastUpdate, wallet]);
-
-  const loadLastWalletData = useCallback(async () => {
-    if (lastUpdate !== today) {
-      const response = await api.get("/fauna/wallet");
-
-      setAssets(response.data.assets.sort());
-      setLastUpdate(today);
-    }
-  }, [lastUpdate, today]);
+    localStorage.setItem("carteira-recomendada", JSON.stringify({ wallet }));
+  }, [wallet]);
 
   const updateLastWalletData = useCallback(() => {
     const updatedWallet = assets.map((asset) => {
@@ -203,8 +180,9 @@ export default function CarteiraRecomendada({ binancePrices }) {
       e.preventDefault();
       updateAndCalculatePortfolio();
       setPortfolioChanged(false);
+      saveData();
     },
-    [updateAndCalculatePortfolio]
+    [saveData, updateAndCalculatePortfolio]
   );
 
   function handleQtdEditableSubmit(item, newData) {
@@ -252,18 +230,14 @@ export default function CarteiraRecomendada({ binancePrices }) {
   useEffect(() => {
     const localData = JSON.parse(localStorage.getItem("carteira-recomendada"));
     if (!!localData) {
-      setAssets(localData.assets.sort());
       setWallet(localData.wallet.sort());
-      setLastUpdate(localData.lastUpdate);
     }
+    async function loadAssets() {
+      const response = await api.get("/fauna/wallet");
+      setAssets(response.data.assets.sort());
+    }
+    loadAssets();
   }, []);
-
-  useEffect(() => {
-    const localStorageString = localStorage.getItem("carteira-recomendada");
-    const isEqual =
-      localStorageString == JSON.stringify({ wallet, assets, lastUpdate });
-    setSaved(isEqual);
-  }, [assets, lastUpdate, wallet]);
 
   function handleOnChangeCaixaInput(e) {
     setCash(keepItNumberAboveZero(e.target.value));
@@ -303,29 +277,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
                 BTC
               </Button>
             </ButtonGroup>
-
-            <ButtonGroup size="sm" isAttached variant="outline">
-              <Button
-                colorScheme="gray"
-                onClick={loadLastWalletData}
-                disabled={lastUpdate === today}
-              >
-                Carregar Carteira
-              </Button>
-              <Button
-                colorScheme="gray"
-                onClick={updateLastWalletData}
-                disabled={
-                  JSON.stringify(walletAssets) === JSON.stringify(assets)
-                }
-              >
-                Registrar Carteira
-              </Button>
-
-              <Button colorScheme="gray" onClick={saveData} disabled={saved}>
-                Salvar
-              </Button>
-            </ButtonGroup>
           </Flex>
           <form onSubmit={calculateAndShow}>
             <Flex mt={4} align="center">
@@ -349,10 +300,26 @@ export default function CarteiraRecomendada({ binancePrices }) {
           )}
 
           {assetsMissingWallet.length > 0 && (
-            <Text>
-              Ativos para entrar na carteira:{" "}
-              {JSON.stringify(assetsMissingWallet)}
-            </Text>
+            <Flex align="center" my={4}>
+              <Text>
+                Ativos para entrar na carteira:{" "}
+                {assetsMissingWallet.map((a, i) => (
+                  <Text as="span" key={a} mr={2}>
+                    {a}
+                    {i + 1 !== assetsMissingWallet.length && ","}
+                  </Text>
+                ))}
+              </Text>
+              <Button
+                colorScheme="gray"
+                onClick={updateLastWalletData}
+                disabled={
+                  JSON.stringify(walletAssets) === JSON.stringify(assets)
+                }
+              >
+                Registrar Ativos na Carteira
+              </Button>
+            </Flex>
           )}
 
           <Table>
@@ -469,9 +436,9 @@ export default function CarteiraRecomendada({ binancePrices }) {
               <Tr>
                 <Td>Total:</Td>
                 <Td> - </Td>
-                <Td> {portfolioSum[quote]} </Td>
+                <Td>{portfolioSum[quote].toFixed(quote === "USDT" ? 2 : 6)}</Td>
                 <Td> - </Td>
-                <Td> </Td>
+                <Td> - </Td>
               </Tr>
             </Tfoot>
           </Table>

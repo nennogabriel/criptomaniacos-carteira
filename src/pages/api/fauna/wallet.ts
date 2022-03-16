@@ -3,11 +3,44 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { fauna } from "../../../services/fauna";
 import { getSession } from "next-auth/react";
 
+interface DataProps {
+  name?: string;
+  assets: Array<string>;
+}
+
 interface ResponseProps {
-  data: {
-    name: string;
-    assets: Array<string>;
-  };
+  data?: DataProps;
+}
+
+var data: DataProps = { assets: [""] };
+
+const dataUpdateInterval = 180000;
+var lastDataDataUpdate = 0;
+
+async function lazyUpdate() {
+  if (new Date().getTime() > lastDataDataUpdate + dataUpdateInterval) {
+    const response: ResponseProps = await fauna.query(
+      q.If(
+        q.Not(
+          q.Exists(q.Match(q.Index("wallet_by_name"), q.Casefold("matheus")))
+        ),
+
+        q.Create(q.Collection("wallets"), {
+          data: {
+            name: "matheus",
+            assets: ["BTC", "BUSD"],
+          },
+        }),
+
+        q.Get(q.Match(q.Index("wallet_by_name"), q.Casefold("matheus")))
+      )
+    );
+
+    data = response.data;
+  }
+
+  lastDataDataUpdate = new Date().getTime();
+  return data;
 }
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -29,24 +62,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     return res.json({ assets });
   } else if (req.method === "GET") {
-    const response: ResponseProps = await fauna.query(
-      q.If(
-        q.Not(
-          q.Exists(q.Match(q.Index("wallet_by_name"), q.Casefold("matheus")))
-        ),
+    const data = await lazyUpdate();
 
-        q.Create(q.Collection("wallets"), {
-          data: {
-            name: "matheus",
-            assets: ["BTC", "BUSD"],
-          },
-        }),
-
-        q.Get(q.Match(q.Index("wallet_by_name"), q.Casefold("matheus")))
-      )
-    );
-
-    const { assets } = response.data;
+    const { assets } = data;
 
     return res.json({ assets });
   }

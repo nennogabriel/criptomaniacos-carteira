@@ -8,7 +8,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     <ChakraProvider theme={theme}>
       <SessionProvider session={session}>
         <Component {...pageProps} />
-        <HuggyChatScript />
+        {process.env.NODE_ENV !== "development" && <HuggyChatScript />}
       </SessionProvider>
     </ChakraProvider>
   );
