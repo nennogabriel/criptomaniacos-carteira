@@ -9,6 +9,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       <SessionProvider session={session}>
         <Component {...pageProps} />
         {process.env.NODE_ENV !== "development" && <HuggyChatScript />}
+        <HuggyChatScript />
       </SessionProvider>
     </ChakraProvider>
   );

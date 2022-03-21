@@ -1,9 +1,9 @@
-import NextDocument, { Html, Head, Main, NextScript } from 'next/document';
+import NextDocument, { Html, Head, Main, NextScript } from "next/document";
 
 export default class Document extends NextDocument {
   render() {
     return (
-      <Html>
+      <Html lang="pt-br">
         <Head>
           <link rel="preconnect" href="https://fonts.gstatic.com" />
           <link
@@ -11,6 +11,7 @@ export default class Document extends NextDocument {
             rel="stylesheet"
           />
 
+          <meta httpEquiv="Content-Language" content="pt-br"></meta>
           <link rel="shortcut icon" href="/favicon.png" type="image/png" />
         </Head>
         <body>
