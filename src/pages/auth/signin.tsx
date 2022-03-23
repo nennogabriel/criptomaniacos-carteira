@@ -18,7 +18,7 @@ export default function SignIn({ providers }: any) {
                   dataOnauth={(result: any) => {
                     signIn(provider.id, undefined, result);
                   }}
-                ></TelegramLoginButton>
+                />
               </Box>
             );
           }

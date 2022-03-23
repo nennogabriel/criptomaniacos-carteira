@@ -15,10 +15,10 @@ interface ResponseProps {
 var data: DataProps = { assets: [""] };
 
 const dataUpdateInterval = 180000;
-var lastDataDataUpdate = 0;
+var lastDataUpdate = 0;
 
 async function lazyUpdate() {
-  if (new Date().getTime() > lastDataDataUpdate + dataUpdateInterval) {
+  if (new Date().getTime() > lastDataUpdate + dataUpdateInterval) {
     const response: ResponseProps = await fauna.query(
       q.If(
         q.Not(
@@ -39,7 +39,7 @@ async function lazyUpdate() {
     data = response.data;
   }
 
-  lastDataDataUpdate = new Date().getTime();
+  lastDataUpdate = new Date().getTime();
   return data;
 }
 
