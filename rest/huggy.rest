@@ -1,0 +1,9 @@
+
+
+POST https://carteira.criptomaniacos.app/api/fauna/huggy
+Content-Type: application/json
+
+{
+  "token": "",
+  "huggy": true
+}
