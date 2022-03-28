@@ -1,21 +1,23 @@
-import React from "react";
+import React, { memo } from "react";
 
 const HuggyChatScript = () => {
   return (
     <div
       dangerouslySetInnerHTML={{
-        __html: `<script>
+        __html: `
+      <script>
         !(function (b, t, c) {
           ((c = t.createElement(b)).async = 1),
-            (c.src = 'https://s.cmania.co/membros.js'),
+            (c.src = 'https://s.cmania.co/code.js'),
             (b = t.getElementsByTagName(b)[0]).parentNode.insertBefore(c, b);
         })('script', document);
-      </script>`,
+      </script>
+      `,
       }}
     ></div>
   );
 };
 
-export default HuggyChatScript;
+export default memo(HuggyChatScript);
 
 //<!-- Init code Huggy.chat  //--><!-- End code Huggy.chat  //-->

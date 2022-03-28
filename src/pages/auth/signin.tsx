@@ -1,9 +1,13 @@
 import { Box, Button, Center } from "@chakra-ui/react";
-import { getProviders, signIn } from "next-auth/react";
+import { getProviders, getSession, signIn, useSession } from "next-auth/react";
 import PageHeader from "../../components/PageHeader";
 import TelegramLoginButton from "../../components/TelegramLoginButton";
 
 export default function SignIn({ providers }: any) {
+  const session = useSession();
+
+  console.log("session", session);
+
   return (
     <Box m="0 auto" maxW="90%" w="1200px">
       <PageHeader />
@@ -38,8 +42,47 @@ export default function SignIn({ providers }: any) {
 
 // This is the recommended way for Next.js 9.3 or newer
 export async function getServerSideProps(context: any) {
+  const session = await getSession(context);
+  // redirect to home if already logged in
+  if (session?.role > 0) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false,
+      },
+    };
+  }
   const providers = await getProviders();
   return {
     props: { providers },
   };
 }
+
+// export async function getServerSideProps(context) {
+//   const session = await getSession(context);
+
+//   if (session?.role < 2) {
+//     return {
+//       redirect: {
+//         destination: "/contrate",
+//         permanent: false,
+//       },
+//     };
+//   }
+
+//   let response = {
+//     data: [],
+//   };
+
+//   try {
+//     response = await api.get(`/binance/getPrices`);
+//   } catch (err) {
+//     response = await axios.get(
+//       `${process.env.NEXTAUTH_URL}/api/binance/getPrices`
+//     );
+//   }
+//   const binancePrices = response.data;
+//   return {
+//     props: { binancePrices },
+//   };
+// }

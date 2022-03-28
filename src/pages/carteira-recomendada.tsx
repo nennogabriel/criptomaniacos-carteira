@@ -47,7 +47,6 @@ export default function CarteiraRecomendada({ binancePrices }) {
   const session = useSession();
   const [wallet, setWallet] = useState<Array<AssetsProps>>([]);
   const [assets, setAssets] = useState([]);
-  const [lastUpdate, setLastUpdate] = useState("");
 
   const [quote, setQuote] = useState("USDT");
   const [balanceType, setBalanceType] = useState("TOKEN");

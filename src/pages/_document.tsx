@@ -1,4 +1,5 @@
 import NextDocument, { Html, Head, Main, NextScript } from "next/document";
+import HuggyChatScript from "../components/HuggyChatScript";
 
 export default class Document extends NextDocument {
   render() {
@@ -16,7 +17,9 @@ export default class Document extends NextDocument {
         </Head>
         <body>
           <Main />
+
           <NextScript />
+          <HuggyChatScript />
         </body>
       </Html>
     );
