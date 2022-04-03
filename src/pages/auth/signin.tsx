@@ -57,32 +57,3 @@ export async function getServerSideProps(context: any) {
     props: { providers },
   };
 }
-
-// export async function getServerSideProps(context) {
-//   const session = await getSession(context);
-
-//   if (session?.role < 2) {
-//     return {
-//       redirect: {
-//         destination: "/contrate",
-//         permanent: false,
-//       },
-//     };
-//   }
-
-//   let response = {
-//     data: [],
-//   };
-
-//   try {
-//     response = await api.get(`/binance/getPrices`);
-//   } catch (err) {
-//     response = await axios.get(
-//       `${process.env.NEXTAUTH_URL}/api/binance/getPrices`
-//     );
-//   }
-//   const binancePrices = response.data;
-//   return {
-//     props: { binancePrices },
-//   };
-// }

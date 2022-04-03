@@ -19,6 +19,7 @@ import {
   Flex,
   useEditableControls,
   IconButton,
+  Tooltip,
 } from "@chakra-ui/react";
 import axios from "axios";
 import { getSession, signIn, useSession } from "next-auth/react";
@@ -73,6 +74,12 @@ export default function CarteiraRecomendada({ binancePrices }) {
       const quotes = Object.keys(binancePrices)
         .filter((item) => item.startsWith(ticker))
         .map((item) => item.replace(ticker, ""));
+      const quotex1 = {
+        BTC: binancePrices[`${ticker}BTC`],
+        USDT:
+          binancePrices[`${ticker}USDT`] ||
+          binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`],
+      };
       const quote = {
         BTC: binancePrices[`${ticker}BTC`] * Number(qtd),
         USDT:
@@ -86,7 +93,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
       };
       const hasUSDT = quotes.some((item) => item === "USDT");
 
-      return { ...item, quote, quoteShow, hasUSDT };
+      return { ...item, quote, quotex1, quoteShow, hasUSDT };
     });
 
     return data;
@@ -363,7 +370,11 @@ export default function CarteiraRecomendada({ binancePrices }) {
 
                 return (
                   <Tr key={c.ticker}>
-                    <Td>{c.ticker}</Td>
+                    <Td>
+                      <Tooltip label={`${quote} : ${c.quotex1[quote]}`}>
+                        {c.ticker}
+                      </Tooltip>
+                    </Td>
                     <Td>
                       <Editable
                         defaultValue={Number(c.qtd).toString()}
