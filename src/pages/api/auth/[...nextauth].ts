@@ -59,7 +59,7 @@ export default NextAuth({
           };
           return user;
         } catch (err) {
-          // console.log(err);
+          console.log(err);
           return null;
         }
       },
