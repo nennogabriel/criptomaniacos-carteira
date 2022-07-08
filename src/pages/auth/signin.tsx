@@ -6,7 +6,7 @@ import TelegramLoginButton from "../../components/TelegramLoginButton";
 export default function SignIn({ providers }: any) {
   const session = useSession();
 
-  console.log("session", session);
+  // console.log("session", session);
 
   return (
     <Box m="0 auto" maxW="90%" w="1200px">

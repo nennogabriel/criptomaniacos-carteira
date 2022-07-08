@@ -13,14 +13,9 @@ declare global {
       TELEGRAM_AUTH_TOKEN: string;
 
       FAUNADB_KEY: string;
-      FAUNADB_KEY_DEV: string;
 
       CRM_URL: string;
       CRM_TOKEN: string;
-
-      APP_URL: string;
-      APP_SECRET: string;
-      APP_SECRET_DEV: string;
 
       N8N_TOKEN: string;
     }

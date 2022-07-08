@@ -19,7 +19,7 @@ export default class Document extends NextDocument {
           <Main />
 
           <NextScript />
-          <HuggyChatScript />
+          {process.env.NODE_ENV === "production" && <HuggyChatScript />}
         </body>
       </Html>
     );

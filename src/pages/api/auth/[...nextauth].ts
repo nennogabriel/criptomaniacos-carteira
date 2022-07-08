@@ -38,7 +38,7 @@ export default NextAuth({
 
         try {
           const crmResponse = await axios.get(
-            `${crmUrl}/by-telegram-id/${id}`,
+            `${crmUrl}/by_telegram_id/${id}`,
             {
               headers: {
                 Authorization: crmToken,
@@ -71,22 +71,23 @@ export default NextAuth({
       return token;
     },
     session: async ({ session, user, token }) => {
+      const reqUser = user || session.user;
       token?.role && (session.role = token.role);
-      if (user && user.email.endsWith("@criptomaniacos.io")) {
+      if (reqUser && reqUser.email.endsWith("@criptomaniacos.io")) {
         session.role = 3;
       } else {
         try {
           const crmResponse = await axios.get(
-            `${crmUrl}/by-telegram-id/${user.id}`,
+            `${crmUrl}/by_email/${reqUser.email}`,
             {
               headers: {
                 Authorization: crmToken,
               },
             }
           );
-          const { data } = crmResponse;
+          const { data: crmUser } = crmResponse;
           const valid = ["customer", "admin"].includes(
-            data.auth["app-carteira-alt-factor"]
+            crmUser.auth["app-carteira-alt-factor"]
           );
           session.role = valid ? 2 : 1;
         } catch (err) {
@@ -98,8 +99,11 @@ export default NextAuth({
     },
 
     signIn: async ({ user, account, profile, email, credentials }) => {
+      const reqEmail = profile.email.endsWith("criptomaniacos.io")
+        ? profile.email
+        : email;
       try {
-        const crmResponse = await axios.get(`${crmUrl}/by-email/${email}`, {
+        const crmResponse = await axios.get(`${crmUrl}/by_email/${reqEmail}`, {
           headers: {
             Authorization: crmToken,
           },
@@ -110,7 +114,7 @@ export default NextAuth({
         );
         return valid;
       } catch (err) {
-        console.log(err);
+        // console.log(err.isAxiosError ? err.response.data : err);
         return false;
       }
     },
