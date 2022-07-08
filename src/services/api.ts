@@ -13,9 +13,4 @@ const binance = axios.create({
   baseURL: "https://api.binance.com/api/v3",
 });
 
-const telegram = axios.create({
-  baseURL: process.env.TELEGRAM_BOT_URL,
-  headers: { Authorization: process.env.TELEGRAM_AUTH_TOKEN },
-});
-
-export { api, binance, telegram };
+export { api, binance };

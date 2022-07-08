@@ -1,30 +1,30 @@
 import NextAuth from "next-auth";
-import GithubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-import { query as q } from "faunadb";
-import { fauna } from "../../../services/fauna";
-import { telegram } from "../../../services/api";
+import axios from "axios";
 
-type UserProps = {
-  role?: string;
-};
+const crmUrl = process.env.CRM_URL;
+const crmToken = process.env.CRM_TOKEN;
+const secret = process.env.NEXTAUTH_SECRET;
+const googleId = process.env.GOOGLE_ID;
+const googleSecret = process.env.GOOGLE_SECRET;
 
 export default NextAuth({
   // Configure one or more authentication providers
-  secret: process.env.NEXTAUTH_SECRET,
+  secret,
 
   jwt: {
-    secret: process.env.NEXTAUTH_SECRET,
+    secret,
   },
   pages: {
     signIn: "/auth/signin",
   },
 
   providers: [
-    GithubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    GoogleProvider({
+      clientId: googleId,
+      clientSecret: googleSecret,
     }),
     CredentialsProvider({
       name: "Telegram",
@@ -34,19 +34,27 @@ export default NextAuth({
         if (!data) {
           return null;
         }
-        const { id, username, first_name } = data;
+        const { id, first_name } = data;
 
         try {
-          const responseTelegramBot = await telegram.get(
-            `/user_on_group/${id}`
+          const crmResponse = await axios.get(
+            `${crmUrl}/by-telegram-id/${id}`,
+            {
+              headers: {
+                Authorization: crmToken,
+              },
+            }
           );
+          const { data } = crmResponse;
 
-          const { valid } = responseTelegramBot.data;
+          const valid = ["customer", "admin"].includes(
+            data.auth["app-carteira-alt-factor"]
+          );
 
           const user = {
             id,
-            name: `${first_name} (@${username})`,
-            email: `${id}@web.telegram.org`,
+            name: `${first_name}`,
+            email: `${data.email}`,
             role: valid ? 2 : 1,
           };
           return user;
@@ -64,18 +72,26 @@ export default NextAuth({
     },
     session: async ({ session, user, token }) => {
       token?.role && (session.role = token.role);
-      try {
-        const faunaUserData = await fauna.query<UserProps>(
-          q.Select(
-            "data",
-            q.Get(
-              q.Match(q.Index("user_by_email"), q.Casefold(session.user.email))
-            )
-          )
-        );
-        session.role = faunaUserData.role || 1;
-      } catch (err) {
-        console.log("Error when tried to get user status");
+      if (user && user.email.endsWith("@criptomaniacos.io")) {
+        session.role = 3;
+      } else {
+        try {
+          const crmResponse = await axios.get(
+            `${crmUrl}/by-telegram-id/${user.id}`,
+            {
+              headers: {
+                Authorization: crmToken,
+              },
+            }
+          );
+          const { data } = crmResponse;
+          const valid = ["customer", "admin"].includes(
+            data.auth["app-carteira-alt-factor"]
+          );
+          session.role = valid ? 2 : 1;
+        } catch (err) {
+          console.log(err);
+        }
       }
 
       return session;
@@ -83,26 +99,18 @@ export default NextAuth({
 
     signIn: async ({ user, account, profile, email, credentials }) => {
       try {
-        await fauna.query(
-          q.If(
-            q.Not(
-              q.Exists(
-                q.Match(q.Index("user_by_email"), q.Casefold(user.email))
-              )
-            ),
-
-            q.Create(q.Collection("users"), {
-              data: {
-                email: user.email,
-                role: user?.role || 1,
-              },
-            }),
-
-            q.Get(q.Match(q.Index("user_by_email"), q.Casefold(user.email)))
-          )
+        const crmResponse = await axios.get(`${crmUrl}/by-email/${email}`, {
+          headers: {
+            Authorization: crmToken,
+          },
+        });
+        const { data } = crmResponse;
+        const valid = ["customer", "admin"].includes(
+          data.auth["app-carteira-alt-factor"]
         );
-        return true;
+        return valid;
       } catch (err) {
+        console.log(err);
         return false;
       }
     },
