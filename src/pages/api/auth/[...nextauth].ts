@@ -99,9 +99,7 @@ export default NextAuth({
     },
 
     signIn: async ({ user, account, profile, email, credentials }) => {
-      const reqEmail = profile.email.endsWith("criptomaniacos.io")
-        ? profile.email
-        : email;
+      const reqEmail = email || user.email || profile.email;
       try {
         const crmResponse = await axios.get(`${crmUrl}/by_email/${reqEmail}`, {
           headers: {
