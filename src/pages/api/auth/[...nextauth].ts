@@ -45,16 +45,16 @@ export default NextAuth({
               },
             }
           );
-          const { data } = crmResponse;
+          const { data: crmUser } = crmResponse;
 
           const valid = ["customer", "admin"].includes(
-            data.auth["app-carteira-alt-factor"]
+            crmUser.auth["app-carteira-alt-factor"]
           );
 
           const user = {
             id,
             name: `${first_name}`,
-            email: `${data.email}`,
+            email: `${crmUser.email}`,
             role: valid ? 2 : 1,
           };
           return user;
