@@ -12,9 +12,9 @@ const HomePage = () => {
       </Head>
       <Box m="0 auto" maxW="90%" w="1200px">
         <PageHeader />
-        <NextLink href="/carteira-recomendada">
+        <NextLink href="/carteira-alt-factor">
           <Button as="a" type="button">
-            Carteira recomendada
+            Carteira Alt Factor
           </Button>
         </NextLink>
       </Box>
