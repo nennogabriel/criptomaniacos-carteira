@@ -1,5 +1,5 @@
-import NextDocument, { Html, Head, Main, NextScript } from "next/document";
-import HuggyChatScript from "../components/HuggyChatScript";
+import NextDocument, { Html, Head, Main, NextScript } from 'next/document';
+import HuggyChatScript from '../components/HuggyChatScript';
 
 export default class Document extends NextDocument {
   render() {
@@ -19,7 +19,7 @@ export default class Document extends NextDocument {
           <Main />
 
           <NextScript />
-          {process.env.NODE_ENV === "production" && <HuggyChatScript />}
+          {process.env.NODE_ENV === 'production' && <HuggyChatScript />}
         </body>
       </Html>
     );
