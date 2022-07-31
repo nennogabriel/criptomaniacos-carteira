@@ -4,11 +4,11 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 
 import axios from 'axios';
 
-const crmUrl = process.env.CRM_URL;
-const crmToken = process.env.CRM_TOKEN;
-const secret = process.env.NEXTAUTH_SECRET;
-const googleId = process.env.GOOGLE_ID;
-const googleSecret = process.env.GOOGLE_SECRET;
+const crmUrl = process.env.CRM_URL || 'http://localhost:3000';
+const crmToken = process.env.CRM_TOKEN || '12345';
+const secret = process.env.NEXTAUTH_SECRET || 'secret';
+const googleId = process.env.GOOGLE_ID || '';
+const googleSecret = process.env.GOOGLE_SECRET || '';
 
 export default NextAuth({
   // Configure one or more authentication providers
