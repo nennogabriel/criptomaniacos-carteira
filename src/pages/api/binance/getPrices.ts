@@ -1,5 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { binance } from "../../../services/api";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { binance } from '../../../services/api';
 
 interface PriceProps {
   [k: string]: string;
@@ -12,10 +12,13 @@ var lastPriceDataUpdate = 0;
 
 async function updatePrices() {
   if (new Date().getTime() < lastPriceDataUpdate + priceUpdateInterval) return;
-  const responsePrices = await binance.get("/ticker/price");
+  const responsePrices = await binance.get('/ticker/price');
 
   prices = Object.fromEntries(
-    responsePrices.data.map((item) => [item.symbol.toUpperCase(), item.price])
+    responsePrices.data.map((item: any) => [
+      item.symbol.toUpperCase(),
+      item.price,
+    ])
   );
 
   lastPriceDataUpdate = new Date().getTime();

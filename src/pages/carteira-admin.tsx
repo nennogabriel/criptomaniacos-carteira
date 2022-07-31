@@ -1,42 +1,42 @@
-import { Box, Button, Flex, Input, Text } from "@chakra-ui/react";
-import { getSession, signIn, useSession } from "next-auth/react";
-import Head from "next/head";
-import { useEffect, useState } from "react";
-import PageHeader from "../components/PageHeader";
-import { api } from "../services/api";
+import { Box, Button, Flex, Input, Text } from '@chakra-ui/react';
+import { getSession, signIn, useSession } from 'next-auth/react';
+import Head from 'next/head';
+import { useEffect, useState } from 'react';
+import PageHeader from '../components/PageHeader';
+import { api } from '../services/api';
 
 const CarteiraAdminPage = () => {
   const session = useSession();
-  const [assets, setAssets] = useState([]);
-  const [originAssets, setOriginAssets] = useState([]);
-  const [newAsset, setNewAsset] = useState("");
+  const [assets, setAssets] = useState<string[]>([]);
+  const [originAssets, setOriginAssets] = useState<string[]>([]);
+  const [newAsset, setNewAsset] = useState('');
   const [updated, setUpdated] = useState(false);
 
-  function handleRemoveAsset(asset) {
+  function handleRemoveAsset(asset: string) {
     setAssets(assets.filter((a) => a !== asset));
   }
 
-  function handleSubmit(e) {
+  function handleSubmit(e: any) {
     e.preventDefault();
     const addNewAsset = newAsset.toUpperCase().trim();
     if (!assets.find((a) => a == addNewAsset)) {
       setAssets([...assets, addNewAsset].sort());
     }
-    setNewAsset("");
+    setNewAsset('');
   }
 
   async function handleUpdate() {
     if (assets.length === 10) {
-      const response = await api.post("/fauna/wallet", { assets });
+      const response = await api.post('/fauna/wallet', { assets });
       setOriginAssets([...assets]);
     } else {
-      alert("somente enviar com 10 ativos");
+      alert('somente enviar com 10 ativos');
     }
   }
 
   useEffect(() => {
     async function loadData() {
-      const response = await api.get("/fauna/wallet");
+      const response = await api.get('/fauna/wallet');
 
       setAssets(response.data.assets.sort());
       setOriginAssets(response.data.assets.sort());
@@ -49,11 +49,11 @@ const CarteiraAdminPage = () => {
     setUpdated(String(originAssets) == String(assets) || assets.length !== 10);
   }, [assets, originAssets]);
 
-  if (session.status === "loading") {
+  if (session.status === 'loading') {
     return <p>Loading...</p>;
   }
 
-  if (session.status === "unauthenticated") {
+  if (session.status === 'unauthenticated') {
     signIn();
     return <p>Access Denied</p>;
   }
@@ -107,12 +107,12 @@ const CarteiraAdminPage = () => {
 
 export default CarteiraAdminPage;
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(context: any) {
   const session = await getSession(context);
-  if (session?.role < 3) {
+  if (session?.role || 1 < 3) {
     return {
       redirect: {
-        destination: "/",
+        destination: '/',
         permanent: false,
       },
     };

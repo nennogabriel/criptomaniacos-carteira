@@ -1,5 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { binance } from "../../../services/api";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { binance } from '../../../services/api';
 interface PairProps {
   [k: string]: string;
 }
@@ -11,10 +11,13 @@ var lastPairDataUpdate = 0;
 
 async function updatePairs() {
   if (new Date().getTime() < lastPairDataUpdate + pairUpdateInterval) return;
-  const responsePairs = await binance.get("/ticker/pair");
+  const responsePairs = await binance.get('/ticker/pair');
 
   pairs = Object.fromEntries(
-    responsePairs.data.map((item) => [item.symbol.toUpperCase(), item.pair])
+    responsePairs.data.map((item: any) => [
+      item.symbol.toUpperCase(),
+      item.pair,
+    ])
   );
 
   lastPairDataUpdate = new Date().getTime();

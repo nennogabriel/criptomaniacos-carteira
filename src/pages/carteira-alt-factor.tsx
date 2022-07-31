@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/layout";
+import { Box } from '@chakra-ui/layout';
 
 import {
   Table,
@@ -20,15 +20,15 @@ import {
   useEditableControls,
   IconButton,
   Tooltip,
-} from "@chakra-ui/react";
-import axios from "axios";
-import { getSession, signIn, useSession } from "next-auth/react";
-import Head from "next/head";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+} from '@chakra-ui/react';
+import axios from 'axios';
+import { getSession, signIn, useSession } from 'next-auth/react';
+import Head from 'next/head';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { FaEdit, FaWindowClose, FaCheckSquare } from "react-icons/fa";
-import PageHeader from "../components/PageHeader";
-import { api } from "../services/api";
+import { FaEdit, FaWindowClose, FaCheckSquare } from 'react-icons/fa';
+import PageHeader from '../components/PageHeader';
+import { api } from '../services/api';
 
 interface AssetsProps {
   ticker: string;
@@ -38,22 +38,22 @@ interface AssetsProps {
 
 function keepItNumberAboveZero(n: string) {
   if (Number(n) < 0) {
-    return "0";
+    return '0';
   } else {
-    return n.replace(/^0+/, "") || "0";
+    return n.replace(/^0+/, '') || '0';
   }
 }
 
-export default function CarteiraRecomendada({ binancePrices }) {
+export default function CarteiraRecomendada({ binancePrices }: any) {
   const session = useSession();
   const [wallet, setWallet] = useState<Array<AssetsProps>>([]);
-  const [assets, setAssets] = useState([]);
+  const [assets, setAssets] = useState<any[]>([]);
 
-  const [quote, setQuote] = useState("USDT");
-  const [balanceType, setBalanceType] = useState("TOKEN");
-  const [cash, setCash] = useState("0");
+  const [quote, setQuote] = useState<'BTC' | 'USDT'>('USDT');
+  const [balanceType, setBalanceType] = useState('TOKEN');
+  const [cash, setCash] = useState('0');
 
-  const [portfolioAction, setPortfolioAction] = useState([]);
+  const [portfolioAction, setPortfolioAction] = useState<any[]>([]);
   const [portfolioChanged, setPortfolioChanged] = useState(false);
 
   const walletAssets = useMemo(() => {
@@ -73,12 +73,13 @@ export default function CarteiraRecomendada({ binancePrices }) {
       const { ticker, qtd } = item;
       const quotes = Object.keys(binancePrices)
         .filter((item) => item.startsWith(ticker))
-        .map((item) => item.replace(ticker, ""));
+        .map((item) => item.replace(ticker, ''));
       const quotex1 = {
-        BTC: binancePrices[`${ticker}BTC`],
+        BTC: Number(binancePrices[`${ticker}BTC`]),
         USDT:
-          binancePrices[`${ticker}USDT`] ||
-          binancePrices[`${ticker}BTC`] * binancePrices[`BTCUSDT`],
+          Number(binancePrices[`${ticker}USDT`]) ||
+          Number(binancePrices[`${ticker}BTC`]) *
+            Number(binancePrices[`BTCUSDT`]),
       };
       const quote = {
         BTC: binancePrices[`${ticker}BTC`] * Number(qtd),
@@ -91,7 +92,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
         BTC: quote.BTC.toFixed(8),
         USDT: quote.USDT.toFixed(3),
       };
-      const hasUSDT = quotes.some((item) => item === "USDT");
+      const hasUSDT = quotes.some((item) => item === 'USDT');
 
       return { ...item, quote, quotex1, quoteShow, hasUSDT };
     });
@@ -111,7 +112,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
               portfolioAssets
                 .map((item) => item.quote.BTC)
                 .reduce((acc, item) => acc + item) +
-              Number(cash) / binancePrices["BTCUSDT"],
+              Number(cash) / binancePrices['BTCUSDT'],
             weight: portfolioAssets
               .map((item) => item.weight)
               .reduce((acc, item) => acc + item),
@@ -141,7 +142,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
 
       const action = {
         min: Math.abs(percent.ideal - percent.actual) * portfolioSum.USDT > 10,
-        text: percent.ideal > percent.actual ? "Comprar" : "Vender",
+        text: percent.ideal > percent.actual ? 'Comprar' : 'Vender',
         quote: {
           USDT: (
             Math.abs(percent.ideal - percent.actual) * portfolioSum.USDT
@@ -163,7 +164,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
   }, [binancePrices, portfolioSum, wallet]);
 
   const saveData = useCallback(() => {
-    localStorage.setItem("carteira-recomendada", JSON.stringify({ wallet }));
+    localStorage.setItem('carteira-recomendada', JSON.stringify({ wallet }));
   }, [wallet]);
 
   const updateLastWalletData = useCallback(() => {
@@ -174,7 +175,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
         ? hasInWallet[0]
         : {
             ticker: asset,
-            qtd: "0",
+            qtd: '0',
             weight: 10,
           };
     });
@@ -182,7 +183,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
   }, [assets, wallet]);
 
   const calculateAndShow = useCallback(
-    (e) => {
+    (e: any) => {
       e.preventDefault();
       updateAndCalculatePortfolio();
       setPortfolioChanged(false);
@@ -191,7 +192,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
     [saveData, updateAndCalculatePortfolio]
   );
 
-  function handleQtdEditableSubmit(item, newData) {
+  function handleQtdEditableSubmit(item: any, newData: any) {
     const updateWallet = wallet.map((c) => ({
       ...c,
       qtd: c.ticker === item.ticker ? keepItNumberAboveZero(newData) : c.qtd,
@@ -234,26 +235,28 @@ export default function CarteiraRecomendada({ binancePrices }) {
   }
 
   useEffect(() => {
-    const localData = JSON.parse(localStorage.getItem("carteira-recomendada"));
+    const localData = JSON.parse(
+      localStorage.getItem('carteira-recomendada') || '[]'
+    );
     if (!!localData) {
       setWallet(localData.wallet.sort());
     }
     async function loadAssets() {
-      const response = await api.get("/fauna/wallet");
+      const response = await api.get('/fauna/wallet');
       setAssets(response.data.assets.sort());
     }
     loadAssets();
   }, []);
 
-  function handleOnChangeCaixaInput(e) {
+  function handleOnChangeCaixaInput(e: any) {
     setCash(keepItNumberAboveZero(e.target.value));
   }
 
-  if (session.status === "loading") {
+  if (session.status === 'loading') {
     return <p>Loading...</p>;
   }
 
-  if (session.status === "unauthenticated") {
+  if (session.status === 'unauthenticated') {
     signIn();
     return <p>Access Denied</p>;
   }
@@ -271,14 +274,14 @@ export default function CarteiraRecomendada({ binancePrices }) {
           <Flex>
             <ButtonGroup size="sm" isAttached variant="outline" mr={8}>
               <Button
-                colorScheme={quote === "USDT" ? "green" : "gray"}
-                onClick={() => setQuote("USDT")}
+                colorScheme={quote === 'USDT' ? 'green' : 'gray'}
+                onClick={() => setQuote('USDT')}
               >
                 USDT
               </Button>
               <Button
-                colorScheme={quote === "BTC" ? "yellow" : "gray"}
-                onClick={() => setQuote("BTC")}
+                colorScheme={quote === 'BTC' ? 'yellow' : 'gray'}
+                onClick={() => setQuote('BTC')}
               >
                 BTC
               </Button>
@@ -308,11 +311,11 @@ export default function CarteiraRecomendada({ binancePrices }) {
           {assetsMissingWallet.length > 0 && (
             <Flex align="center" my={4}>
               <Text>
-                Ativos para entrar na carteira:{" "}
+                Ativos para entrar na carteira:{' '}
                 {assetsMissingWallet.map((a, i) => (
                   <Text as="span" key={a} mr={2}>
                     {a}
-                    {i + 1 !== assetsMissingWallet.length && ","}
+                    {i + 1 !== assetsMissingWallet.length && ','}
                   </Text>
                 ))}
               </Text>
@@ -341,20 +344,20 @@ export default function CarteiraRecomendada({ binancePrices }) {
                   <br />
                   <ButtonGroup size="sm" isAttached variant="outline">
                     <Button
-                      colorScheme={balanceType === "TOKEN" ? "purple" : "gray"}
-                      onClick={() => setBalanceType("TOKEN")}
+                      colorScheme={balanceType === 'TOKEN' ? 'purple' : 'gray'}
+                      onClick={() => setBalanceType('TOKEN')}
                     >
                       TOKEN
                     </Button>
                     <Button
                       colorScheme={
-                        balanceType === "BASE"
-                          ? quote === "USDT"
-                            ? "green"
-                            : "yellow"
-                          : "gray"
+                        balanceType === 'BASE'
+                          ? quote === 'USDT'
+                            ? 'green'
+                            : 'yellow'
+                          : 'gray'
                       }
-                      onClick={() => setBalanceType("BASE")}
+                      onClick={() => setBalanceType('BASE')}
                     >
                       {quote}
                     </Button>
@@ -410,8 +413,8 @@ export default function CarteiraRecomendada({ binancePrices }) {
                                 as="span"
                                 color={
                                   action.percent.actual * 100 - 10 >= 0
-                                    ? "green"
-                                    : "red"
+                                    ? 'green'
+                                    : 'red'
                                 }
                               >
                                 ({(action.percent.actual * 100 - 10).toFixed(1)}
@@ -425,7 +428,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
                           {action.action.min ? (
                             <>
                               <p>
-                                {balanceType === "TOKEN"
+                                {balanceType === 'TOKEN'
                                   ? `${action.action.text} 
                         ${action.action.quote.TOKEN} ${action.ticker}`
                                   : `${action.action.text}
@@ -433,7 +436,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
                               </p>
                             </>
                           ) : (
-                            "-"
+                            '-'
                           )}
                         </Td>
                       </>
@@ -446,7 +449,7 @@ export default function CarteiraRecomendada({ binancePrices }) {
               <Tr>
                 <Td>Total:</Td>
                 <Td> - </Td>
-                <Td>{portfolioSum[quote].toFixed(quote === "USDT" ? 2 : 6)}</Td>
+                <Td>{portfolioSum[quote].toFixed(quote === 'USDT' ? 2 : 6)}</Td>
                 <Td> - </Td>
                 <Td> - </Td>
               </Tr>
@@ -458,13 +461,13 @@ export default function CarteiraRecomendada({ binancePrices }) {
   );
 }
 
-export async function getServerSideProps(context) {
+export async function getServerSideProps(context: any) {
   const session = await getSession(context);
 
-  if (session?.role < 2) {
+  if (session?.role || 1 < 2) {
     return {
       redirect: {
-        destination: "/contrate",
+        destination: '/contrate',
         permanent: false,
       },
     };

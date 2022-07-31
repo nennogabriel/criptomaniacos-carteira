@@ -1,8 +1,8 @@
-import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import CredentialsProvider from "next-auth/providers/credentials";
+import NextAuth from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
-import axios from "axios";
+import axios from 'axios';
 
 const crmUrl = process.env.CRM_URL;
 const crmToken = process.env.CRM_TOKEN;
@@ -18,7 +18,7 @@ export default NextAuth({
     secret,
   },
   pages: {
-    signIn: "/auth/signin",
+    signIn: '/auth/signin',
   },
 
   providers: [
@@ -27,7 +27,7 @@ export default NextAuth({
       clientSecret: googleSecret,
     }),
     CredentialsProvider({
-      name: "Telegram",
+      name: 'Telegram',
       credentials: {},
       authorize: async (credentials, req) => {
         const data = req.query;
@@ -47,8 +47,8 @@ export default NextAuth({
           );
           const { data: crmUser } = crmResponse;
 
-          const valid = ["customer", "admin"].includes(
-            crmUser.auth["app-carteira-alt-factor"]
+          const valid = ['customer', 'admin'].includes(
+            crmUser.auth['app-carteira-alt-factor']
           );
 
           const user = {
@@ -73,26 +73,23 @@ export default NextAuth({
     session: async ({ session, user, token }) => {
       const reqUser = user || session.user;
       token?.role && (session.role = token.role);
-      if (reqUser && reqUser.email.endsWith("@criptomaniacos.io")) {
-        session.role = 3;
-      } else {
-        try {
-          const crmResponse = await axios.get(
-            `${crmUrl}/by_email/${reqUser.email}`,
-            {
-              headers: {
-                Authorization: crmToken,
-              },
-            }
-          );
-          const { data: crmUser } = crmResponse;
-          const valid = ["customer", "admin"].includes(
-            crmUser.auth["app-carteira-alt-factor"]
-          );
-          session.role = valid ? 2 : 1;
-        } catch (err) {
-          console.log(err);
-        }
+      try {
+        const crmResponse = await axios.get(
+          `${crmUrl}/by_email/${reqUser.email}`,
+          {
+            headers: {
+              Authorization: crmToken,
+            },
+          }
+        );
+        const { data: crmUser } = crmResponse;
+        const isValid = ['customer', 'admin'].includes(
+          crmUser.auth['app-carteira-alt-factor']
+        );
+        const isAdmin = crmUser.auth['app-carteira-alt-factor'] === 'admin';
+        session.role = isValid ? (isAdmin ? 3 : 2) : 1;
+      } catch (err) {
+        console.log(err);
       }
 
       return session;
@@ -107,8 +104,8 @@ export default NextAuth({
           },
         });
         const { data } = crmResponse;
-        const valid = ["customer", "admin"].includes(
-          data.auth["app-carteira-alt-factor"]
+        const valid = ['customer', 'admin'].includes(
+          data.auth['app-carteira-alt-factor']
         );
         return valid;
       } catch (err) {

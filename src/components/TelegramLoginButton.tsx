@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
 
 declare global {
   interface Window {
@@ -7,60 +7,41 @@ declare global {
 }
 
 interface TelegramLoginButtonProps {
-  widgetVersion: string;
-  botName: string;
-  dataOnauth: any;
+  botName?: string;
+  requestAccess?: any;
+  usePic?: string;
+  dataOnauth?: any;
+  dataAuthUrl?: string;
+  widgetVersion?: string;
 }
 
-class TelegramLoginButton extends React.Component<TelegramLoginButtonProps> {
-  instance: any;
-
-  constructor(props: TelegramLoginButtonProps) {
-    super(props);
-  }
-
-  componentDidMount() {
-    const {
-      botName,
-      requestAccess,
-      usePic,
-      dataOnauth,
-      dataAuthUrl,
-      widgetVersion,
-    }: any = this.props;
-
+function TelegramLoginButton({
+  botName = 'criptomaniacos_carteira_bot',
+  requestAccess,
+  usePic,
+  dataOnauth,
+  dataAuthUrl,
+  widgetVersion = '16',
+}: TelegramLoginButtonProps) {
+  const [telegramBtn, setTelegramBtn] = useState<React.ReactNode>(null);
+  useEffect(() => {
     window.TelegramLoginWidget = {
-      dataOnauth: (user) => dataOnauth(user),
+      dataOnauth: (user: any) => dataOnauth(user),
     };
-
-    const script = document.createElement("script");
-    script.src = "https://telegram.org/js/telegram-widget.js?" + widgetVersion;
-    script.setAttribute("data-telegram-login", botName);
-    script.setAttribute("data-request-access", requestAccess);
-    script.setAttribute("data-userpic", usePic);
-    if (dataAuthUrl !== undefined) {
-      script.setAttribute("data-auth-url", dataAuthUrl);
-    } else {
-      script.setAttribute(
-        "data-onauth",
-        "TelegramLoginWidget.dataOnauth(user)"
-      );
-    }
-    script.async = true;
-    this.instance.appendChild(script);
-  }
-
-  render() {
-    return (
-      <div
-        ref={(component) => {
-          this.instance = component;
-        }}
-      >
-        {this.props.children}
-      </div>
+    setTelegramBtn(
+      React.createElement('script', {
+        src: 'https://telegram.org/js/telegram-widget.js?' + widgetVersion,
+        'data-telegram-login': botName,
+        'data-request-access': requestAccess,
+        'data-userpic': usePic,
+        'data-onauth': 'TelegramLoginWidget.dataOnauth(user)',
+        'data-auth-url': dataAuthUrl,
+        async: true,
+      })
     );
-  }
+  }, [botName, dataAuthUrl, dataOnauth, requestAccess, usePic, widgetVersion]);
+
+  return <>{telegramBtn}</>;
 }
 
 export default TelegramLoginButton;

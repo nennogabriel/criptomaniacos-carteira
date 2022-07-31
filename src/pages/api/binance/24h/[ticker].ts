@@ -1,5 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { binance } from "../../../../services/api";
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { binance } from '../../../../services/api';
 
 interface Change24Props {
   [k: string]: string;
@@ -13,10 +13,10 @@ var lastChangeDataUpdate = 0;
 async function updateChanges() {
   if (new Date().getTime() < lastChangeDataUpdate + changeUpdateInterval)
     return;
-  const responseChanges = await binance.get("/ticker/24hr");
+  const responseChanges = await binance.get('/ticker/24hr');
 
   changes = Object.fromEntries(
-    responseChanges.data.map((item) => [
+    responseChanges.data.map((item: any) => [
       item.symbol.toUpperCase(),
       item.priceChangePercent,
     ])
@@ -34,7 +34,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     if (tickerChange) {
       return res.status(200).json(tickerChange);
     } else {
-      return res.status(404).json("ticker not found");
+      return res.status(404).json('ticker not found');
     }
   });
 }
