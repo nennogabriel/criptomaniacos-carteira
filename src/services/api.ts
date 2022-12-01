@@ -10,7 +10,7 @@ const api = axios.create({
 });
 
 const binance = axios.create({
-  baseURL: "https://api.binance.com/api/v3",
+  baseURL: "https://api.binance.us/api/v3",
 });
 
 export { api, binance };
