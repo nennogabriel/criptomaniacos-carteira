@@ -3,8 +3,12 @@ import Head from "next/head";
 import React from "react";
 import PageHeader from "../components/PageHeader";
 import NextLink from "next/link";
+import LayoutMaintenance from "../components/LayoutMaintenance";
 
 const HomePage = () => {
+  if (true) {
+    return <LayoutMaintenance />;
+  }
   return (
     <>
       <Head>
