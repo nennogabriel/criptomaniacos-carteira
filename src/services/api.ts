@@ -13,4 +13,8 @@ const binance = axios.create({
   baseURL: "https://api.binance.us/api/v3",
 });
 
-export { api, binance };
+const coinGecko = axios.create({
+  baseURL: "https://api.coingecko.com/api/v3",
+});
+
+export { api, binance, coinGecko };
